@@ -1,0 +1,6 @@
+{
+  "name": "APS Founder Cohort Pre-Simulation",
+  "description": "An immersive emotional and cognitive transition experience for the REYOU Education APS Founder Cohort.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
