@@ -93,8 +93,8 @@ export default function Screen04RoleReveal({
       
       {/* Header and status info */}
       <div className="w-full flex justify-between items-center text-[9px] font-mono tracking-widest text-[#D4AF37] font-extrabold z-10 select-none uppercase">
-        <span>REYOU ALLOCATION PROTOCOLS</span>
-        <span>STAGE 04 & 05: THE MANDATE</span>
+        <span>REYOU COHORT PROFILE</span>
+        <span>YOUR TEAM ROLE DISCOVERY</span>
       </div>
 
       {/* Main Core */}
@@ -116,10 +116,10 @@ export default function Screen04RoleReveal({
               
               <div className="space-y-1">
                 <span className="text-[10px] font-mono tracking-[0.25em] text-[#D4AF37] uppercase font-black block">
-                  OFFICIAL INDIVIDUAL ALLOCATION
+                  YOUR INDIVIDUAL ASSIGNMENT
                 </span>
                 <h2 className="text-xl md:text-2xl font-display font-medium text-neutral-400 uppercase tracking-widest font-sans">
-                  TEAM ASSIGNED
+                  TEAM SUCCESS
                 </h2>
               </div>
 
@@ -129,12 +129,12 @@ export default function Screen04RoleReveal({
                 </h1>
                 <div className="w-8 h-[1.5px] bg-[#D4AF37] mx-auto" />
                 <p className="text-base text-neutral-600 font-normal leading-relaxed">
-                  You have been selected.
+                  You are selected and ready!
                 </p>
               </div>
 
               <div className="text-[9.5px] font-mono text-neutral-450 tracking-widest uppercase">
-                PRE-SIMULATION DEPLOYMENT • SEAL ATTESTED
+                REYOU COHORT DISCOVERY • DISCOVER YOUR PROFILE
               </div>
             </motion.div>
           )}
@@ -164,7 +164,7 @@ export default function Screen04RoleReveal({
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="bg-neutral-50/50 border border-neutral-200/80 p-8 rounded-xs space-y-3"
               >
-                <span className="text-[10px] font-mono text-neutral-500 tracking-wider uppercase font-extrabold select-none">OFFICIAL DESIGNATION:</span>
+                <span className="text-[10px] font-mono text-neutral-500 tracking-wider uppercase font-extrabold select-none">YOUR TARGET ROLE:</span>
                 <h1 className="text-3xl md:text-4xl font-display font-extrabold text-neutral-900 tracking-wider uppercase leading-none font-sans">
                   {activeMandate.title}
                 </h1>
@@ -181,7 +181,7 @@ export default function Screen04RoleReveal({
                   }}
                   className="bg-[#FAF8F5] border-2 border-[#D4AF37] hover:bg-[#D4AF37] hover:text-white text-[#D4AF37] font-mono text-[10px] font-black tracking-[0.2em] py-4 px-10 uppercase transition-all duration-300 cursor-pointer w-full"
                 >
-                  READ MY BOARD MANDATE
+                  DISCOVER MY ROLE DETAILS
                 </button>
               </div>
             </motion.div>
@@ -197,13 +197,13 @@ export default function Screen04RoleReveal({
             >
               {/* Executive fellowship card design elements */}
               <div className="absolute top-0 right-0 p-6 font-mono text-[10px] text-neutral-400 uppercase select-none">
-                FELLOWSHIP DECK
+                STUDENT DECK
               </div>
 
               <div className="space-y-6 pb-6 border-b border-neutral-100">
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-widest font-black block leading-none">
-                    BOARD DESIGNER ATTESTATION • TEAM {activeTeam.name.toUpperCase()}
+                    COHORT ASSIGNMENT • TEAM {activeTeam.name.toUpperCase()}
                   </span>
                   <h1 className="text-3xl md:text-3xl.5 font-display font-bold text-neutral-900 uppercase tracking-wide font-sans">
                     {activeMandate.title}
@@ -219,7 +219,7 @@ export default function Screen04RoleReveal({
 
               <div className="py-6 space-y-4">
                 <h4 className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37] font-bold">
-                  — COMMAND PARAMETERS & DUTIES —
+                  — YOUR ROLE TIPS & RESPONSIBILITIES —
                 </h4>
                 
                 <ul className="space-y-4 text-xs md:text-sm text-neutral-700 font-sans leading-relaxed">
@@ -238,7 +238,7 @@ export default function Screen04RoleReveal({
 
               <div className="pt-4 border-t border-neutral-100 flex justify-between items-center select-none">
                 <span className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest font-bold">
-                  APPLE LEADERSHIP PROGRAM RETAINED
+                  REYOU IMMERSIVE EXPERIENCES
                 </span>
                 <button
                   id="role-revealed-continue-btn"
@@ -248,7 +248,7 @@ export default function Screen04RoleReveal({
                   }}
                   className="bg-[#D4AF37] text-white font-mono text-[10px] hover:bg-yellow-500 hover:text-black font-black tracking-widest py-3 px-8 uppercase transition-colors duration-300 rounded-xs"
                 >
-                  ASSEMBLE TEAM
+                  JOIN MY TEAM
                 </button>
               </div>
             </motion.div>
@@ -260,7 +260,7 @@ export default function Screen04RoleReveal({
 
       {/* Corporate Boardroom Signature line */}
       <div className="w-full text-center text-[9px] font-mono text-neutral-400 tracking-widest uppercase z-10 select-none">
-        HARVARD LEADERSHIP LABS • EXECUTIVE ACCELERATOR
+        REYOU EDUCATION • EMPOWERING INDEPENDENT FUTURES
       </div>
     </div>
   );

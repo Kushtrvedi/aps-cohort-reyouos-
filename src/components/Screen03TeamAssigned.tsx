@@ -76,8 +76,8 @@ export default function Screen03TeamAssigned({
 
       {/* Header and status info */}
       <div className="w-full flex justify-between items-center text-[10px] font-mono tracking-widest text-[#AAB2C8] z-10 select-none uppercase">
-        <span className="text-[#D4AF37]">COHORT INTEGRATION ENGINE</span>
-        <span>STAGE 03 • TEAM MATCHING</span>
+        <span className="text-[#D4AF37]">REYOU TEAM ASSIGNMENT</span>
+        <span>STEP 3 • TEAM DISCOVERY</span>
       </div>
 
       {/* Main Core */}
@@ -105,15 +105,15 @@ export default function Screen03TeamAssigned({
                   Finding your team{dots}
                 </h2>
                 <p className="text-xs text-[#AAB2C8] max-w-xs mx-auto leading-relaxed">
-                  Scanning class profiles, balancing dynamic psychological values, and mapping 40 boardroom chambers...
+                  Connecting with peers, reviewing your strengths, and assigning you to an amazing cohort...
                 </p>
               </div>
 
               {/* Mock scanning data rows */}
               <div className="w-48 bg-white/[0.04] p-3 rounded-sm border border-white/5 space-y-1 text-left text-[8px] font-mono text-neutral-450 uppercase tracking-widest">
-                <div className="flex justify-between"><span>Registry ID:</span> <span className="text-white">OK</span></div>
+                <div className="flex justify-between"><span>Student ID:</span> <span className="text-white">OK</span></div>
                 <div className="flex justify-between"><span>Section Match:</span> <span className="text-white">100%</span></div>
-                <div className="flex justify-between"><span>Traits Balance:</span> <span className="text-[#D4AF37]">ACTIVE</span></div>
+                <div className="flex justify-between"><span>Cohort Group:</span> <span className="text-[#D4AF37]">READY</span></div>
               </div>
             </motion.div>
           )}
@@ -145,13 +145,13 @@ export default function Screen03TeamAssigned({
 
               <div className="space-y-3">
                 <span className="text-[10px] font-mono tracking-[0.35em] text-[#D4AF37] uppercase font-bold bg-[#D4AF37]/10 px-4 py-1.5 border border-[#D4AF37]/20 rounded-xs select-none">
-                  WELCOME TO COHORT BOARDROOM
+                  WELCOME TO YOUR TEAM
                 </span>
                 <h1 className="text-4xl md:text-5xl font-sans tracking-tight text-white uppercase font-black">
                   {activeTeam.name.toUpperCase()}
                 </h1>
                 <p className="text-xs text-[#AAB2C8] leading-relaxed max-w-sm mx-auto">
-                  Congratulations <span className="text-white font-bold">{userName}</span>! You have been drafted into <strong className="text-white font-black">{activeTeam.name}</strong> alongside 4 peer leaders.
+                  Congratulations <span className="text-white font-bold">{userName}</span>! You have joined forces with <strong className="text-white font-black">{activeTeam.name}</strong> alongside 4 talented classmates.
                 </p>
               </div>
 
@@ -166,7 +166,7 @@ export default function Screen03TeamAssigned({
                   <span className="text-base font-mono text-[#D4AF37] font-black">120 PTS</span>
                 </div>
                 <div>
-                  <span className="block text-[8px] font-mono text-neutral-500 uppercase">ACTIVE CHAMBER</span>
+                  <span className="block text-[8px] font-mono text-neutral-500 uppercase">BOARDROOM</span>
                   <span className="text-base font-mono text-white font-black">ROOM 08</span>
                 </div>
               </div>
@@ -181,7 +181,7 @@ export default function Screen03TeamAssigned({
                 }}
                 className="bg-[#D4AF37] text-neutral-950 font-mono text-xs hover:bg-yellow-500 font-extrabold tracking-widest py-4 px-12 uppercase transition-all duration-300 rounded-sm shadow-[0_0_20px_rgba(212,175,55,0.15)] cursor-pointer"
               >
-                PROCEED TO THE PORTRAIT →
+                MEET YOUR TEAMMATES →
               </motion.button>
             </motion.div>
           )}
@@ -191,7 +191,7 @@ export default function Screen03TeamAssigned({
 
       {/* Corporate Boardroom Signature line */}
       <div className="w-full text-center text-[10px] font-mono text-[#AAB2C8] opacity-50 tracking-widest uppercase z-10 select-none">
-        HARVARD LEADERSHIP LABS SIGNATURE EXPERIENCE COHORT
+        REYOU EDUCATION • EMPOWERING TOMORROW'S LEADERS
       </div>
     </div>
   );

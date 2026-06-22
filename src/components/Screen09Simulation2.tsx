@@ -818,7 +818,7 @@ export default function Screen09Simulation2({
             >
               <div className="text-center space-y-1">
                 <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.25em] font-bold block">
-                  PHASE 04 : THE CRISIS COORDINATION PROTOCOL
+                  PHASE 04 : THE CRISIS DISCUSSION
                 </span>
                 <h2 className="text-2xl md:text-3xl font-display font-bold text-white uppercase tracking-wider">
                   The Crisis Room
@@ -906,7 +906,7 @@ export default function Screen09Simulation2({
                       <span className="text-[9px] text-[#D4AF37] uppercase font-bold tracking-widest">
                         {rolesList.find(r => r.id === activeBoardRole)?.name.toUpperCase()} CRITICAL MEMO
                       </span>
-                      <span className="text-neutral-500 text-[8px]">APS SIM 02 PROTOCOL</span>
+                      <span className="text-neutral-500 text-[8px]">APS SIMULATION 02</span>
                     </div>
                     <p className="text-neutral-200 leading-relaxed font-sans text-sm font-serif">
                       {rolesList.find(r => r.id === activeBoardRole)?.action}
@@ -918,7 +918,7 @@ export default function Screen09Simulation2({
               {/* The Action Choices */}
               <div className="space-y-4 pt-4 border-t border-white/10">
                 <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest block font-bold">
-                  CONSENSUS DECISION OUTLINE (TEAM LEAD MANDATORY CHOICE)
+                  TEAM DECISION OUTLINE (TEAM LEAD PICKS THE FINAL CHOICE)
                 </span>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1156,7 +1156,7 @@ export default function Screen09Simulation2({
                   onClick={handleNextPhase}
                   className="px-8 py-3 bg-[#D4AF37] hover:bg-yellow-500 text-black rounded-sm font-mono text-xs uppercase tracking-wider font-bold cursor-pointer transition-all"
                 >
-                  DEPLAY LENS PROTOCOL →
+                  GO TO LENS VIEW →
                 </button>
               </div>
 

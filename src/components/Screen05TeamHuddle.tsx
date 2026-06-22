@@ -88,8 +88,8 @@ export default function Screen05TeamHuddle({ userName, selectedTeamId, onComplet
 
       {/* Header and status info */}
       <div className="w-full flex justify-between items-center text-[10px] font-mono tracking-widest text-[#AAB2C8] z-10 select-none uppercase">
-        <span className="text-[#D4AF37]">COHORT CHAMBER INTERACTION</span>
-        <span>STAGE 04 • TEAM DASHBOARD</span>
+        <span className="text-[#D4AF37]">REYOU TEAM HUDDLE</span>
+        <span>STEP 4 • TEAM ROOM</span>
       </div>
 
       {/* Main Core */}
@@ -99,23 +99,23 @@ export default function Screen05TeamHuddle({ userName, selectedTeamId, onComplet
           {/* Dashboard Header Info */}
           <div className="text-center space-y-2">
             <span className="text-[10px] font-mono tracking-[0.25em] text-[#D4AF37] uppercase font-black bg-[#D4AF37]/10 py-1 px-4 border border-[#D4AF37]/20 rounded-xs inline-block">
-              ACTIVE COHORT ROOM
+              ACTIVE STUDY GROUP
             </span>
             <h1 className="text-3xl md:text-4.5xl font-sans tracking-tight text-white uppercase font-black">
               TEAM {activeTeam.name.toUpperCase()}
             </h1>
             <p className="text-xs text-[#AAB2C8] max-w-md mx-auto leading-relaxed">
-              Your boardroom coordinates are synchronized live. Watch your key performance indices grow with choices.
+              Your team space is ready! Together you will explore tough choices, balance priorities, and learn first-hand how your decisions shape the future.
             </p>
           </div>
 
           {/* MASTER METRIC BOARD (Points: 120, Rank: 3, Decisions Made: 4, Confidence Score: 78) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto w-full">
             {[
-              { label: 'COHORT SCORE', value: '120 PTS', detail: 'Base Merit points', color: 'text-[#D4AF37]' },
-              { label: 'ROOM RANK', value: 'RANK 3', detail: 'Out of 40 active teams', color: 'text-white' },
-              { label: 'DECISIONS MADE', value: '4 / 4', detail: 'Ready for trade-off huddle', color: 'text-white' },
-              { label: 'CONFIDENCE INDEX', value: '78 %', detail: 'Team debate safety index', color: 'text-[#D4AF37]' }
+              { label: 'GROUP SCORE', value: '120 PTS', detail: 'Initial starting points', color: 'text-[#D4AF37]' },
+              { label: 'CLASS RANK', value: 'RANK 3', detail: 'Among current active teams', color: 'text-white' },
+              { label: 'TASKS COMPLETED', value: '4 / 4', detail: 'Ready for trade-off decisions', color: 'text-white' },
+              { label: 'TEAM ALIGNMENT', value: '78 %', detail: 'Peer agreement level', color: 'text-[#D4AF37]' }
             ].map((metric, idx) => (
               <motion.div
                 key={idx}
@@ -134,8 +134,8 @@ export default function Screen05TeamHuddle({ userName, selectedTeamId, onComplet
 
           {/* 5 Premium Profile Cards in alignment */}
           <div className="space-y-3 max-w-4xl mx-auto w-full pt-2">
-            <h3 className="text-xs font-mono uppercase tracking-widest text-left text-neutral-500 border-b border-white/5 pb-2">
-              Chamber Member Board (5 Roles)
+            <h3 className="text-xs font-mono uppercase tracking-widest text-left text-neutral-500 border-b border-[#FAF8F5]/10 pb-2">
+              Your Teammates & Roles
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -190,10 +190,10 @@ export default function Screen05TeamHuddle({ userName, selectedTeamId, onComplet
           whileTap={{ scale: 0.98 }}
           className="w-full bg-[#D4AF37] text-neutral-950 border border-[#D4AF37] font-mono hover:bg-yellow-500 text-[11px] py-4 px-8 tracking-[0.3em] font-extrabold uppercase transition-all duration-300 shadow-[0_4px_15px_rgba(212,175,55,0.15)] flex justify-center items-center gap-2 cursor-pointer font-black"
         >
-          CONFIRM BOARDPROTOCOL
+          CONTINUE TO GUIDELINES
         </motion.button>
         <div className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest leading-none">
-          SECURE SEED INITIATIVE PREPARED
+          Get ready for your first choice adventure!
         </div>
       </div>
     </div>

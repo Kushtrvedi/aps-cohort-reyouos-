@@ -449,7 +449,7 @@ export default function ReyouHub() {
     doc.setTextColor(212, 175, 55);
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(10);
-    doc.text('REYOU FOUNDER COHORT DEPLOYMENT PROTOCOL', 148, 30, { align: 'center' });
+    doc.text('REYOU STUDENT COHORT DISCOVERY EXPEDITION', 148, 30, { align: 'center' });
 
     // Main Title
     doc.setTextColor(255, 255, 255);
@@ -1370,7 +1370,7 @@ export default function ReyouHub() {
                 <div className="border border-[#D4AF37]/20 p-5 md:p-8 space-y-4 relative z-10">
                   <div className="flex flex-col items-center space-y-2">
                     <span className="text-[8.5px] font-mono tracking-[0.25em] text-[#D4AF37] uppercase font-black">
-                      REYOU FOUNDER COHORT DEPLOYMENT PROTOCOL
+                      REYOU STUDENT COHORT DISCOVERY EXPEDITION
                     </span>
                     <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
                   </div>
@@ -1934,7 +1934,7 @@ export default function ReyouHub() {
                 {funnelSection === 'INTERNAL_FEEDBACK' && (
                   <form onSubmit={handleInternalSubmit} className="space-y-4 bg-red-950/10 p-5 rounded border border-red-900/30">
                     <span className="text-[8.5px] font-mono text-red-400 font-extrabold uppercase tracking-widest block">
-                      🛡️ PRIVATE SHIELDING PROTOCOL ENGAGED
+                      🛡️ ANONYMOUS FEEDBACK CORNER
                     </span>
                     
                     <div className="space-y-2 text-left">

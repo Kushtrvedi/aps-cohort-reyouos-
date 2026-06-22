@@ -1361,7 +1361,7 @@ export default function Screen08Briefing({
                     <div className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
                       <label className="text-[10px] font-mono text-[#D4AF37] uppercase block tracking-widest font-black">
-                        🧠 TEAM ASSUMPTION ENGINE
+                        🧠 TEAM REFLECTION DECK
                       </label>
                     </div>
                     <p className="text-[11px] text-neutral-400 font-sans">
@@ -1799,7 +1799,7 @@ export default function Screen08Briefing({
                         <div className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
                           <label className="text-[10px] font-mono text-[#D4AF37] uppercase block tracking-widest font-black">
-                            🧠 TEAM ASSUMPTION ENGINE
+                            🧠 TEAM REFLECTION DECK
                           </label>
                         </div>
                         <p className="text-[11px] text-neutral-400 font-sans">
@@ -2297,7 +2297,7 @@ export default function Screen08Briefing({
                     <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2.5 py-0.5 rounded-sm">
                       YEAR 5
                     </span>
-                    <span className="text-neutral-500 font-mono text-[10px]">SCAM PROTOCOL RESOLUTION</span>
+                    <span className="text-neutral-500 font-mono text-[10px]">SIMULATION OUTCOME SAFETY</span>
                   </div>
                   <p className="font-sans text-neutral-300 text-sm leading-relaxed">
                     {getYearFiveStory()}
@@ -2612,7 +2612,7 @@ export default function Screen08Briefing({
             >
               <div className="text-center space-y-1">
                 <span className="text-[10px] font-mono text-[#D4AF37] uppercase tracking-[0.25em] font-bold block">
-                  PHASE 10 : INDIVIDUAL DIARY PROTOCOL
+                  STEP 10 : MY PERSONAL REFLECTION
                 </span>
                 <h1 className="text-2xl md:text-3xl font-display font-bold text-white uppercase">
                   Personal Reflection
@@ -2699,7 +2699,7 @@ export default function Screen08Briefing({
 
                   <div className="space-y-2">
                     <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold block">
-                      ARCHIVE PROTOCOL SECURE
+                      REFLECTION JOURNAL SAVED
                     </span>
                     <h2 className="text-2xl font-display font-semibold text-white">
                       Reflection Complete

@@ -80,9 +80,9 @@ export default function Screen02Welcome({ userName, setUserName, onComplete }: S
       </div>
 
       {/* Header element */}
-      <div className="w-full flex justify-between items-center text-[10px] font-mono tracking-widest text-[#AAB2C8] z-10 select-none">
-        <span className="uppercase text-[#D4AF37]">REYOU OPERATION COMMAND CENTRAL</span>
-        <span className="uppercase font-bold">IDENTITY ACTIVATION • STAGE 02</span>
+      <div className="w-full flex justify-between items-center text-[10px] font-mono tracking-widest text-[#AAB2C8] z-10 select-none uppercase">
+        <span className="uppercase text-[#D4AF37]">REYOU STUDENT EXPEDITION</span>
+        <span className="uppercase font-bold">CREATE YOUR PROFILE • STEP 2</span>
       </div>
 
       {/* Primary Workstage */}
@@ -92,10 +92,10 @@ export default function Screen02Welcome({ userName, setUserName, onComplete }: S
           {/* Main heading */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl md:text-4xl font-sans tracking-tight text-white uppercase font-black">
-              IDENTITY ACTIVATION
+              TELL US ABOUT YOURSELF
             </h1>
             <p className="text-xs text-[#AAB2C8] max-w-lg mx-auto font-medium">
-              Activate your simulated boardroom registry. Define your profile parameters to trigger team matching protocols.
+              Introduce yourself and choose the strengths that best represent you. This will help us find your perfect school cohort and teammates!
             </p>
           </div>
 
@@ -106,7 +106,7 @@ export default function Screen02Welcome({ userName, setUserName, onComplete }: S
               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
               
               <h2 className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] border-b border-white/5 pb-2 font-black">
-                1. Registry Parameters
+                1. Your Details
               </h2>
 
               <div className="space-y-4">
@@ -162,7 +162,7 @@ export default function Screen02Welcome({ userName, setUserName, onComplete }: S
               </div>
 
               <div className="pt-2 border-t border-white/5 text-[9px] font-mono text-neutral-500 flex justify-between uppercase">
-                <span>AtteSTATION: APPROVED</span>
+                <span>VERIFICATION: OK</span>
                 <span>SECURE INPUT</span>
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function Screen02Welcome({ userName, setUserName, onComplete }: S
             <div className="lg:col-span-8 space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-2">
                 <h2 className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] font-black">
-                  2. Choose exactly 3 core psychological drivers
+                  2. Choose exactly 3 key strengths or traits
                 </h2>
                 <span className={`text-[10px] font-mono font-extrabold uppercase py-0.5 px-2.5 rounded-full ${
                   selectedTraits.length === 3 
@@ -236,10 +236,10 @@ export default function Screen02Welcome({ userName, setUserName, onComplete }: S
               : 'bg-neutral-900 text-neutral-500 border-white/5 cursor-not-allowed opacity-50'
           }`}
         >
-          CONFIRM MEMBER PROFILE
+          CONFIRM MY PROFILE
         </button>
         <div className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">
-          TRANS-BIAS IDENTITY INTEGRATION SHIELDED
+          Designing immersive student learning experiences
         </div>
       </div>
     </div>

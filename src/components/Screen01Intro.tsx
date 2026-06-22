@@ -89,8 +89,8 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
 
       {/* Header and status info */}
       <div className="w-full flex justify-between items-center text-[10px] font-mono tracking-widest text-[#AAB2C8] font-bold z-10 select-none">
-        <span className="uppercase text-[#D4AF37]">REYOU OS V2.6 • PRE-INTEGRATED</span>
-        <span className="uppercase bg-[#D4AF37]/15 px-3 py-1 border border-[#D4AF37]/30 rounded-xs text-[#D4AF37]">SYSTEM ACTIVE</span>
+        <span className="uppercase text-[#D4AF37]">REYOU STUDENT EXPERIENCE • APS BHOPAL</span>
+        <span className="uppercase bg-[#D4AF37]/15 px-3 py-1 border border-[#D4AF37]/30 rounded-xs text-[#D4AF37]">JOURNEY READY</span>
       </div>
 
       {/* Center Screen */}
@@ -120,8 +120,8 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
                 <h1 className="text-4xl md:text-5xl font-sans tracking-tight text-white uppercase font-black">
                   Army Public School
                 </h1>
-                <h2 className="text-sm font-mono tracking-[0.25em] text-[#AAB2C8] uppercase font-semibold">
-                  Decision Intelligence Mission & Future Readiness
+                <h2 className="text-sm font-sans tracking-wide text-[#AAB2C8] uppercase font-semibold">
+                  A modern learning experience in real-world decision making
                 </h2>
               </div>
 
@@ -130,13 +130,13 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-sm text-left">
                   <span className="block text-[8px] font-mono text-neutral-500 uppercase tracking-widest">COHORT STATUS</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" />
-                    <span className="text-sm font-mono text-[#D4AF37] font-black uppercase tracking-wider">READY</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    <span className="text-sm font-mono text-emerald-400 font-extrabold uppercase tracking-wider">LIVE & READY</span>
                   </div>
                 </div>
 
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-sm text-left">
-                  <span className="block text-[8px] font-mono text-neutral-500 uppercase tracking-widest">REGISTRATION INDEX</span>
+                  <span className="block text-[8px] font-mono text-neutral-500 uppercase tracking-widest">PEERS ASSEMBLED</span>
                   <span className="text-sm font-mono text-white mt-1 block font-black">
                     <span className="text-[#D4AF37]">{checkInCount}</span> <span className="text-neutral-500">/ 200</span> Checked In
                   </span>
@@ -165,13 +165,13 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
                   you will think
                 </h2>
                 <h2 className="text-2xl md:text-3xl font-sans font-normal tracking-wide text-neutral-300">
-                  debate & align
+                  discuss & align
                 </h2>
                 <h2 className="text-2xl md:text-3xl font-sans font-black tracking-normal text-[#D4AF37] flex items-center justify-center gap-1.5">
                   decide
                 </h2>
-                <h2 className="text-xl md:text-2xl font-mono tracking-[0.1em] text-neutral-400">
-                  & defend your choices
+                <h2 className="text-xl md:text-2xl font-sans tracking-tight text-neutral-400">
+                  & discover your unique strengths
                 </h2>
               </div>
             </motion.div>
@@ -187,13 +187,13 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
             >
               <div className="space-y-2">
                 <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-[#D4AF37] font-semibold block bg-[#D4AF37]/5 px-3 py-1 border border-[#D4AF37]/10 rounded-sm">
-                  TRANSITION GATEWAY PROTOCOL
+                  YOUR FUTURE PATHWAY
                 </span>
                 <p className="text-xl md:text-2xl font-sans font-bold text-white uppercase tracking-tight">
-                  Your board seat is verified.
+                  Your team is waiting for you.
                 </p>
                 <p className="text-xs text-[#AAB2C8] leading-relaxed max-w-sm mx-auto">
-                  APS Bhopal XII Batch: 40 simulated boardroom rooms of peer leaders are active. Let's make every choice secure.
+                  Army Public School Class XII: Join standard rooms of fellow peers. Let's make every choice count, learn from trial and error, and grow together!
                 </p>
               </div>
 
@@ -207,7 +207,7 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
                 }}
                 className="bg-[#D4AF37] text-neutral-950 font-mono hover:bg-yellow-500 text-[11px] py-4.5 px-14 tracking-[0.3em] font-extrabold uppercase transition-all duration-300 rounded-sm shadow-[0_4px_25px_rgba(212,175,55,0.25)] cursor-pointer select-none font-black"
               >
-                ACTIVATE PROFILE
+                ENTER SIMULATION
               </motion.button>
             </motion.div>
           )}
