@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RoleId, TEAMS } from '../types';
 import { sounds } from '../utils/audio';
 import { Orb, Canvas } from './BreathingOrb';
+import { useTeamActivityMonitor } from './useTeamActivityMonitor';
+import CertificateGenerator from './CertificateGenerator';
+import RoleCheckpoint from './RoleCheckpoint';
 import {
   Lock,
   Unlock,
@@ -276,6 +279,7 @@ export default function Screen09Simulation2({
   const [decisionLocked, setDecisionLocked] = useState<boolean>(false);
   const [isTimelineExpanding, setIsTimelineExpanding] = useState<boolean>(false);
   const [hasScrapedSim1Reserve, setHasScrapedSim1Reserve] = useState<boolean>(true);
+  const [checkpointPassed, setCheckpointPassed] = useState<boolean>(false);
 
   // Discovery / Rahul Lens questions answers
   const [lensQ1, setLensQ1] = useState<number | null>(null); // Interactive pause
@@ -284,6 +288,9 @@ export default function Screen09Simulation2({
 
   // APS Final state
   const [apsAnswer, setApsAnswer] = useState<string>('');
+  const [surpriseAnswer, setSurpriseAnswer] = useState<string>('');
+  const [wrongAssumptionAnswer, setWrongAssumptionAnswer] = useState<string>('');
+  const [differentActionAnswer, setDifferentActionAnswer] = useState<string>('');
   const [completedAPS, setCompletedAPS] = useState<boolean>(false);
 
   // AI report states
@@ -291,6 +298,18 @@ export default function Screen09Simulation2({
   const [parentReport, setParentReport] = useState<{ didWell: string; canImprove: string; conversationStarter: string } | null>(null);
   const [loadingReports, setLoadingReports] = useState<boolean>(false);
   const [activeReportTab, setActiveReportTab] = useState<'student' | 'parent'>('student');
+
+  // Track team activity in Simulation 2
+  useTeamActivityMonitor(selectedTeamId, `Simulation 2: Phase ${phase}`, [
+    phase,
+    selectedOption,
+    decisionLocked,
+    lensQ1,
+    lensQ2,
+    showExplanation,
+    apsAnswer,
+    completedAPS
+  ]);
 
   const handleGenerateReports = async () => {
     setLoadingReports(true);
@@ -937,6 +956,18 @@ export default function Screen09Simulation2({
                 </div>
               </div>
 
+              {/* Role Checkpoint Gates */}
+              <div className="py-6">
+                <RoleCheckpoint
+                  userName={userName}
+                  assignedRoleId={assignedRoleId}
+                  selectedTeamId={selectedTeamId}
+                  selectedOption={selectedOption}
+                  crisisTitle={data?.crisisTitle || 'emergency'}
+                  onCheckpointStatusChange={(isApproved) => setCheckpointPassed(isApproved)}
+                />
+              </div>
+
               {/* Locking Mechanism Panel */}
               <div className="pt-4 flex justify-between items-center border-t border-white/10 flex-col sm:flex-row gap-4">
                 <button
@@ -953,10 +984,10 @@ export default function Screen09Simulation2({
                       setDecisionLocked(true);
                       handleNextPhase();
                     }}
-                    disabled={!selectedOption || decisionLocked}
+                    disabled={!selectedOption || decisionLocked || !checkpointPassed}
                     className={`w-full sm:w-64 py-3.5 rounded-sm font-bold tracking-widest text-xs uppercase transition-all font-mono cursor-pointer ${
-                      selectedOption && !decisionLocked
-                        ? 'bg-[#D4AF37] hover:bg-yellow-500 text-black shadow-[0_0_20px_rgba(212,175,55,0.15)]'
+                      selectedOption && !decisionLocked && checkpointPassed
+                        ? 'bg-[#D4AF37] hover:bg-yellow-500 text-black shadow-[0_0_20px_rgba(212,175,55,0.15)] bg-[#D4AF37]!'
                         : 'bg-neutral-800 text-neutral-500 border border-neutral-700 cursor-not-allowed'
                     }`}
                   >
@@ -1307,31 +1338,59 @@ export default function Screen09Simulation2({
               </div>
 
               {!completedAPS ? (
-                <div className="space-y-6 text-left max-w-md mx-auto">
+                <div className="space-y-6 text-left max-w-lg mx-auto">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-mono text-neutral-300 uppercase tracking-wider block font-bold">
-                      Which fundamental assumption about life changed the most today?
+                    <label className="text-[11px] font-mono text-[#D4AF37] uppercase tracking-wider block font-bold">
+                      1. What surprised you about today's trade-offs?
                     </label>
                     <textarea
-                      rows={4}
-                      value={apsAnswer}
-                      onChange={(e) => setApsAnswer(e.target.value)}
-                      placeholder="E.g., I realized that my assumptions about the absolute stability of the future were driving my decisions..."
-                      className="w-full bg-black border border-white/15 focus:border-[#D4AF37] rounded-sm p-4 text-xs text-white outline-none font-sans leading-relaxed resize-none"
+                      rows={2}
+                      value={surpriseAnswer}
+                      onChange={(e) => setSurpriseAnswer(e.target.value)}
+                      placeholder="E.g., I was surprised by how fast the cash reserves drained when I bought premium assets..."
+                      className="w-full bg-black border border-white/10 focus:border-[#D4AF37] rounded-sm p-3 text-xs text-white outline-none font-sans leading-relaxed resize-none"
                     />
                   </div>
 
-                  <div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-[#D4AF37] uppercase tracking-wider block font-bold">
+                      2. What assumption of yours turned out to be wrong?
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={wrongAssumptionAnswer}
+                      onChange={(e) => setWrongAssumptionAnswer(e.target.value)}
+                      placeholder="E.g., I wrongly assumed that borrowing extra money is cheap, but the compounding interest is brutal..."
+                      className="w-full bg-black border border-white/10 focus:border-[#D4AF37] rounded-sm p-3 text-xs text-white outline-none font-sans leading-relaxed resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-[#D4AF37] uppercase tracking-wider block font-bold">
+                      3. What is one decision you will make differently tomorrow?
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={differentActionAnswer}
+                      onChange={(e) => setDifferentActionAnswer(e.target.value)}
+                      placeholder="E.g., I will build a dedicated emergency buffer first before thinking about discretionary assets..."
+                      className="w-full bg-black border border-white/10 focus:border-[#D4AF37] rounded-sm p-3 text-xs text-white outline-none font-sans leading-relaxed resize-none"
+                    />
+                  </div>
+
+                  <div className="pt-2">
                     <button
                       onClick={() => {
+                        const combined = `Surprised: ${surpriseAnswer}\nWrong Assumption: ${wrongAssumptionAnswer}\nDo Differently: ${differentActionAnswer}`;
+                        setApsAnswer(combined);
                         sounds.playValidationChime();
                         setCompletedAPS(true);
                       }}
-                      disabled={apsAnswer.trim().length === 0}
+                      disabled={!surpriseAnswer.trim() || !wrongAssumptionAnswer.trim() || !differentActionAnswer.trim()}
                       className={`w-full py-4 rounded-sm font-bold tracking-[0.2em] text-xs uppercase transition-all font-mono cursor-pointer ${
-                        apsAnswer.trim()
+                        surpriseAnswer.trim() && wrongAssumptionAnswer.trim() && differentActionAnswer.trim()
                           ? 'bg-[#D4AF37] hover:bg-yellow-500 text-black shadow-[0_0_25px_rgba(212,175,55,0.2)]'
-                          : 'bg-neutral-800 text-neutral-500 border border-neutral-700 cursor-not-allowed'
+                          : 'bg-neutral-850 text-neutral-500 border border-neutral-700 cursor-not-allowed'
                       }`}
                     >
                       COMMIT PERSONAL IDENTITY SHIFT
@@ -1370,6 +1429,13 @@ export default function Screen09Simulation2({
                       By shifting from localized budget tactics to structural uncertainty testing, you secured the core educational objective of the OECD curriculum standards.
                     </p>
                   </div>
+
+                  {/* HIGH-QUALITY FELLOWSHIP CERTIFICATE GENERATOR */}
+                  <CertificateGenerator
+                    userName={userName}
+                    assignedRoleId={assignedRoleId}
+                    selectedTeamId={selectedTeamId}
+                  />
 
                   {/* REYOU INTEL REPORT INTERACTIVE BLOCK */}
                   <div className="border border-[#1A1A1A] bg-black p-6 rounded-sm space-y-6 text-left relative overflow-hidden">

@@ -696,3 +696,20 @@ Please draft a personalized response of 2-3 concise paragraphs directly addressi
   }
 }
 
+// ==========================================
+// 9. INACTIVITY REFLECTION PROMPT GENERATOR
+// ==========================================
+export async function generateInactivityReflectionPrompt(teamName: string, stage: string): Promise<string> {
+  const systemPrompt = `You are a warm, highly skilled REYOU classroom facilitator. Your goal is to break a team's simulation deadlock or inactivity by providing a sharp, highly engaging, provocative reflection prompt. Address the team directly. Do NOT use dry academic or corporate jargon. Keep it under 2 sentences. Max 35 words. Sound like a real expert mentor popping by their table.`;
+
+  const prompt = `Generate a reflection prompt for Team "${teamName}" who has been completely inactive for 90 seconds in the simulation stage: "${stage}". Give them a challenge or high-impact question to restart their discussion on options/choices.`;
+
+  try {
+    const result = await callNvidiaNim(prompt, systemPrompt);
+    return sanitizeEnglish(result);
+  } catch (err) {
+    console.error("Failsafe for Inactivity Reflection Prompt. Error:", err);
+    return sanitizeEnglish(`Team ${teamName || "there"}! Imagine your current choice faces a full market correction tomorrow. What critical buffer or options are you ignoring right now?`);
+  }
+}
+

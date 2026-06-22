@@ -12,10 +12,21 @@ import {
   ArrowRight,
   Printer,
   ChevronDown,
-  X
+  X,
+  Cloud,
+  CloudLightning
 } from 'lucide-react';
 import { sounds } from '../utils/audio';
 import * as XLSX from 'xlsx';
+import { 
+  initAuth, 
+  googleSignIn, 
+  logout, 
+  saveFileToDrive, 
+  loadFileFromDrive,
+  getAccessToken
+} from '../utils/googleWorkspace';
+import { User } from 'firebase/auth';
 
 // 50 High-Quality Indian Student Records for Premium Demo & Fallbacks
 const DEFAULT_PREFILLED_STUDENTS = [
@@ -130,8 +141,136 @@ export default function CohortImportCenter({ onCohortActivated }: CohortImportCe
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync state with preflown storage setup on mount
+  // Google Workspace Integration State
+  const [googleUser, setGoogleUser] = useState<User | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const [driveSyncStatus, setDriveSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [driveSyncMessage, setDriveSyncMessage] = useState<string>('');
+
+  // Handle Google OAuth and drive services
+  const handleGoogleSignIn = async () => {
+    sounds.playClickSound();
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setGoogleUser(result.user);
+        setGoogleToken(result.accessToken);
+        setDriveSyncStatus('success');
+        setDriveSyncMessage(`Connected to Google Drive: ${result.user.email}`);
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 4000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Auth Failed: ${err.message || err}`);
+    }
+  };
+
+  const handleGoogleLogOut = async () => {
+    sounds.playClickSound();
+    await logout();
+    setGoogleUser(null);
+    setGoogleToken(null);
+    setDriveSyncStatus('idle');
+    setDriveSyncMessage('Disconnected Google Workspace account.');
+    setTimeout(() => setDriveSyncMessage(''), 4000);
+  };
+
+  const handleSaveCohortToDrive = async () => {
+    if (!googleToken) {
+      alert("Please connect your Google Workspace account first.");
+      return;
+    }
+    
+    if (activeTeams.length === 0) {
+      alert("No active cohort data to save. Please import or use the prefilled student roster first.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "CONFIRM GOOGLE DRIVE MUTATION: Do you approve saving or overwriting 'reyou-cohort-data.json' in your personal Google Drive with the current cohort config?"
+    );
+    if (!confirmed) return;
+
+    setDriveSyncStatus('syncing');
+    setDriveSyncMessage('Uploading cohort configuration to your secure Google Drive space...');
+    sounds.playClickSound();
+
+    try {
+      const res = await saveFileToDrive('reyou-cohort-data.json', activeTeams, googleToken);
+      if (res.success) {
+        setDriveSyncStatus('success');
+        setDriveSyncMessage(`Successfully saved cohort configuration! File ID: ${res.fileId?.substring(0, 10)}... (${res.isNew ? 'Created new' : 'Overwrote existing'})`);
+        sounds.playValidationChime();
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 5000);
+      } else {
+        throw new Error("Target operation returned unsuccessful state");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Drive upload failed: ${err.message || err}`);
+    }
+  };
+
+  const handleLoadCohortFromDrive = async () => {
+    if (!googleToken) {
+      alert("Please connect your Google Workspace account first.");
+      return;
+    }
+
+    setDriveSyncStatus('syncing');
+    setDriveSyncMessage("Querying and fetching 'reyou-cohort-data.json' from your Google Drive files...");
+    sounds.playClickSound();
+
+    try {
+      const data = await loadFileFromDrive('reyou-cohort-data.json', googleToken);
+      if (data && Array.isArray(data) && data.length > 0) {
+        setActiveTeams(data);
+        setImportState('ready');
+        setTotalParsedRecords(data.reduce((acc: number, cur: any) => acc + (cur.members?.length || 0), 0));
+        
+        // Persist locally
+        localStorage.setItem('reyou-imported-cohort-full', JSON.stringify(data));
+        window.dispatchEvent(new CustomEvent('reyou-cohort-imported', { detail: data }));
+        
+        setDriveSyncStatus('success');
+        setDriveSyncMessage("Successfully downloaded and applied the cohort data from Google Drive!");
+        sounds.playValidationChime();
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 5000);
+      } else {
+        setDriveSyncStatus('error');
+        setDriveSyncMessage("No valid cohort data file found in Google Drive. Please save a cohort config first.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Drive download failed: ${err.message || 'File not found or access expired.'}`);
+    }
+  };
+
+  // Sync state with preflown storage setup on mount and sub unsubscribe
   useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        setGoogleUser(user);
+        setGoogleToken(token);
+      },
+      () => {
+        setGoogleUser(null);
+        setGoogleToken(null);
+      }
+    );
+
     const cached = localStorage.getItem('reyou-imported-cohort-full');
     if (cached) {
       try {
@@ -145,6 +284,8 @@ export default function CohortImportCenter({ onCohortActivated }: CohortImportCe
         console.error("Cache parsing exception", e);
       }
     }
+
+    return () => unsubscribe();
   }, []);
 
   // Generate Excel Template
@@ -487,6 +628,119 @@ export default function CohortImportCenter({ onCohortActivated }: CohortImportCe
               <span>Demo Import (50 Students)</span>
             </button>
           </div>
+        </div>
+
+        {/* GOOGLE DRIVE SYNC PANEL */}
+        <div className="bg-[#0c0d0f] border border-[#D4AF37]/35 p-5 rounded-xs space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Cloud className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-[10px] font-mono font-black text-[#D4AF37] tracking-widest uppercase pb-[2px]">
+                  Google Drive Cloud Vault
+                </span>
+                {googleUser && (
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-450 animate-pulse ml-1" />
+                )}
+              </div>
+              <p className="text-xs text-neutral-300 font-sans leading-normal">
+                {googleUser ? (
+                  <span>Connected securely to <strong className="text-white font-semibold">{googleUser.email}</strong>. Storing cohort division files and simulation matrices directly inside your private Google Drive cloud container.</span>
+                ) : (
+                  <span>Establish a secure Google API handshake to unlock persistent cohort configuration sync and student reports archiving directly inside your Google Drive.</span>
+                )}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 sm:self-center shrink-0">
+              {googleUser ? (
+                <>
+                  <button
+                    onClick={handleLoadCohortFromDrive}
+                    disabled={driveSyncStatus === 'syncing'}
+                    className="px-3.5 py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-neutral-800 font-mono text-[9.5px] font-bold uppercase tracking-wider rounded-xs transition-all cursor-pointer flex items-center gap-2 focus:ring-1 focus:ring-[#D4AF37]/45 disabled:opacity-50"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <span>Pull from Drive</span>
+                  </button>
+
+                  <button
+                    onClick={handleSaveCohortToDrive}
+                    disabled={driveSyncStatus === 'syncing' || activeTeams.length === 0}
+                    className="px-3.5 py-2 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 hover:border-[#D4AF37] font-mono text-[9.5px] font-bold uppercase tracking-wider rounded-xs transition-all cursor-pointer flex items-center gap-2 focus:ring-1 focus:ring-[#D4AF37]/45 disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Push to Drive</span>
+                  </button>
+
+                  <button
+                    onClick={handleGoogleLogOut}
+                    className="px-3 py-2 text-neutral-505 text-neutral-500 hover:text-red-400 hover:bg-red-950/20 border border-neutral-900 hover:border-red-900/30 font-mono text-[9px] font-bold uppercase tracking-wider rounded-xs transition-all cursor-pointer"
+                  >
+                    Disconnect
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleGoogleSignIn}
+                  className="gsi-material-button text-xs w-full sm:w-auto"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#111',
+                    border: '1px solid rgba(212,175,55,0.4)',
+                    padding: '8px 16px',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    letterSpacing: '0.05em'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ width: '18px', height: '18px' }}>
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                      <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                    <span className="font-mono text-[9.5px] uppercase tracking-wider text-neutral-350 font-extrabold">Connect Google Drive</span>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Feedback logs banner */}
+          {driveSyncMessage && (
+            <div className={`p-3 rounded-xs border font-mono text-[10px] flex items-center gap-2 select-none justify-between animate-fadeIn ${
+              driveSyncStatus === 'syncing' ? 'bg-[#0f0e0a] border-yellow-800/30 text-[#D4AF37]' :
+              driveSyncStatus === 'success' ? 'bg-emerald-950/10 border-emerald-900/30 text-emerald-450' :
+              driveSyncStatus === 'error' ? 'bg-red-950/15 border-red-900/30 text-red-400' : 'bg-neutral-900/50 border-neutral-800 text-neutral-450'
+            }`}>
+              <div className="flex items-center gap-2">
+                {driveSyncStatus === 'syncing' ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : driveSyncStatus === 'success' ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-450" />
+                ) : driveSyncStatus === 'error' ? (
+                  <X className="w-3.5 h-3.5 text-red-400" />
+                ) : (
+                  <CloudLightning className="w-3.5 h-3.5 text-neutral-500" />
+                )}
+                <span>{driveSyncMessage}</span>
+              </div>
+              <button 
+                onClick={() => setDriveSyncMessage('')}
+                className="text-neutral-500 hover:text-white font-bold cursor-pointer transition-all px-1"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Action area dependent on file state */}

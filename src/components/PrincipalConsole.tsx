@@ -14,9 +14,22 @@ import {
   Award,
   AlertTriangle,
   Lightbulb,
-  Workflow
+  Workflow,
+  Cloud,
+  Download,
+  Upload,
+  RefreshCw,
+  X,
+  FileText
 } from 'lucide-react';
 import { sounds } from '../utils/audio';
+import { 
+  initAuth, 
+  googleSignIn, 
+  logout, 
+  saveFileToDrive 
+} from '../utils/googleWorkspace';
+import { User } from 'firebase/auth';
 
 interface PrincipalConsoleProps {
   currentPhase: number;
@@ -58,6 +71,106 @@ export default function PrincipalConsole({
   const [cohortReport, setCohortReport] = useState<{ learningStrengths: string; focusAreas: string; actionSteps: string } | null>(null);
   const [loadingAdminReports, setLoadingAdminReports] = useState<boolean>(false);
   const [adminActiveTab, setAdminActiveTab] = useState<'teacher' | 'principal' | 'cohort'>('teacher');
+
+  // Google Workspace state inside Principal Console
+  const [googleUser, setGoogleUser] = useState<User | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const [driveSyncStatus, setDriveSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [driveSyncMessage, setDriveSyncMessage] = useState<string>('');
+
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        setGoogleUser(user);
+        setGoogleToken(token);
+      },
+      () => {
+        setGoogleUser(null);
+        setGoogleToken(null);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    sounds.playClickSound();
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setGoogleUser(result.user);
+        setGoogleToken(result.accessToken);
+        setDriveSyncStatus('success');
+        setDriveSyncMessage(`Connected to Google Drive!`);
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 3000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Auth Failed: ${err.message || err}`);
+    }
+  };
+
+  const handleGoogleLogOut = async () => {
+    sounds.playClickSound();
+    await logout();
+    setGoogleUser(null);
+    setGoogleToken(null);
+    setDriveSyncStatus('idle');
+    setDriveSyncMessage('Successfully disconnected.');
+    setTimeout(() => setDriveSyncMessage(''), 3000);
+  };
+
+  const handleArchiveReportsToDrive = async () => {
+    if (!googleToken) {
+      alert("Please connect your Google Workspace account first.");
+      return;
+    }
+
+    if (!teacherReport && !principalReport && !cohortReport) {
+      alert("No administrative reports generated yet. Raise reports first!");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "CONFIRM GOOGLE DRIVE ARCHIVAL: Are you sure you want to save or overwrite 'reyou-principal-report.json' in your private Google Drive folder?"
+    );
+    if (!confirmed) return;
+
+    setDriveSyncStatus('syncing');
+    setDriveSyncMessage('Archiving generated simulation reports to Google Drive...');
+    sounds.playClickSound();
+
+    try {
+      const reportsBundle = {
+        archivedAt: new Date().toISOString(),
+        teacherReport,
+        principalReport,
+        cohortReport,
+        phase: currentPhase,
+        phaseTitle
+      };
+
+      const res = await saveFileToDrive('reyou-principal-report.json', reportsBundle, googleToken);
+      if (res.success) {
+        setDriveSyncStatus('success');
+        setDriveSyncMessage(`Reports suite successfully archived! File ID: ${res.fileId?.substring(0, 10)}...`);
+        sounds.playValidationChime();
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 5000);
+      } else {
+        throw new Error("Target drive operation returned failed state");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Archive failure: ${err.message || err}`);
+    }
+  };
 
   // Principal Interactive AI Query States
   const [customQuery, setCustomQuery] = useState<string>('');
@@ -1024,6 +1137,72 @@ export default function PrincipalConsole({
 
               {(teacherReport || principalReport || cohortReport) && (
                 <div className="space-y-5">
+                  {/* GOOGLE DRIVE REPORT ARCHIVAL SUITE */}
+                  <div className="bg-[#0c0d0f] border border-[#D4AF37]/35 p-4 rounded-xs space-y-3">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <Cloud className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <span className="text-[9px] font-mono font-black text-[#D4AF37] tracking-widest uppercase pb-[1px]">
+                            Google Drive Archival
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-neutral-300 font-sans leading-relaxed mt-0.5">
+                          {googleUser ? (
+                            <span>Authenticated to <strong className="text-white">{googleUser.email}</strong>. Ready to archive these reports to your secure Drive folder.</span>
+                          ) : (
+                            <span>Connect with Google Drive to securely write and archive this full administrative report suite.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="shrink-0">
+                        {googleUser ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleArchiveReportsToDrive}
+                              disabled={driveSyncStatus === 'syncing'}
+                              className="px-3 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 hover:border-[#D4AF37] font-mono text-[9px] font-bold uppercase tracking-wider rounded-xs transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>Archive to Drive</span>
+                            </button>
+                            <button
+                              onClick={handleGoogleLogOut}
+                              className="px-2 py-1.5 text-neutral-500 hover:text-red-400 font-mono text-[8.5px] uppercase tracking-wider transition-all cursor-pointer"
+                            >
+                              Log Out
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={handleGoogleSignIn}
+                            className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 font-mono text-[9px] font-extrabold uppercase tracking-widest rounded-xs transition-all cursor-pointer flex items-center gap-2"
+                          >
+                            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ width: '12px', height: '12px' }}>
+                              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                            </svg>
+                            <span>Connect Drive</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {driveSyncMessage && (
+                      <div className={`p-2.5 rounded-xs border font-mono text-[9px] flex items-center gap-1.5 select-none justify-between animate-fadeIn ${
+                        driveSyncStatus === 'syncing' ? 'bg-[#0f0e0a] border-yellow-800/30 text-[#D4AF37]' :
+                        driveSyncStatus === 'success' ? 'bg-emerald-950/10 border-emerald-950/20 text-emerald-400' :
+                        'bg-red-950/15 border-red-950/20 text-red-400'
+                      }`}>
+                        <span>{driveSyncMessage}</span>
+                        <button onClick={() => setDriveSyncMessage('')} className="text-neutral-500 font-bold px-1">✕</button>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Tab Selector */}
                   <div className="flex flex-col md:flex-row bg-neutral-900 p-1 border border-neutral-800 rounded-sm gap-1">
                     <button

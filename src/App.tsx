@@ -15,6 +15,7 @@ import Screen07Oath from './components/Screen07Oath';
 import Screen08Briefing from './components/Screen08Briefing';
 import Screen09Simulation2 from './components/Screen09Simulation2';
 import FacilitatorConsole from './components/FacilitatorConsole';
+import ReyouHub from './components/ReyouHub';
 
 const SCREEN_STEPS = [
   { id: 'INTRO', title: 'Entry' },
@@ -29,7 +30,7 @@ const SCREEN_STEPS = [
 ];
 
 export default function App() {
-  const [appViewMode, setAppViewMode] = useState<'STUDENT' | 'FACILITATOR'>('STUDENT');
+  const [appViewMode, setAppViewMode] = useState<'STUDENT' | 'FACILITATOR' | 'REYOU_HUB'>('STUDENT');
   const [screenIndex, setScreenIndex] = useState(() => {
     const saved = localStorage.getItem('reyou-student-screen-index');
     if (saved) {
@@ -217,19 +218,27 @@ export default function App() {
             <div className="flex bg-neutral-100 p-0.5 rounded-sm border border-neutral-200 text-[10px] font-mono leading-none">
               <button
                 onClick={() => { sounds.playClickSound(); setAppViewMode('STUDENT'); }}
-                className={`px-3 py-1 font-bold rounded-xs cursor-pointer transition-all ${
+                className={`px-2 py-1 font-bold rounded-xs cursor-pointer transition-all ${
                   appViewMode === 'STUDENT' ? 'bg-neutral-900 text-white shadow-xs' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
               >
-                🎓 Student Simulation
+                🎓 Student Sim
               </button>
               <button
                 onClick={() => { sounds.playClickSound(); setAppViewMode('FACILITATOR'); }}
-                className={`px-3 py-1 font-bold rounded-xs cursor-pointer transition-all ${
-                  appViewMode === 'FACILITATOR' ? 'bg-neutral-900 text-white shadow-xs' : 'text-neutral-500 hover:text-neutral-940'
+                className={`px-2 py-1 font-bold rounded-xs cursor-pointer transition-all ${
+                  appViewMode === 'FACILITATOR' ? 'bg-neutral-900 text-white shadow-xs' : 'text-neutral-500 hover:text-[#D4AF37]'
                 }`}
               >
-                👁️ Cohort Consoles
+                👁️ Cohorts
+              </button>
+              <button
+                onClick={() => { sounds.playClickSound(); setAppViewMode('REYOU_HUB'); }}
+                className={`px-2 py-1 font-bold rounded-xs cursor-pointer transition-all ${
+                  appViewMode === 'REYOU_HUB' ? 'bg-[#D4AF37] text-neutral-950 shadow-xs' : 'text-neutral-500 hover:text-[#D4AF37]'
+                }`}
+              >
+                🛡️ OS Hub
               </button>
             </div>
           </div>
@@ -280,13 +289,29 @@ export default function App() {
                 Facilitator Mode Live
               </span>
             )}
+
+            {appViewMode === 'REYOU_HUB' && (
+              <span className="text-[9px] font-mono text-[#D4AF37] font-semibold bg-[#D4AF37]/10 px-2.5 py-0.5 rounded-sm border border-[#D4AF37]/20 uppercase tracking-widest animate-pulse">
+                REYOU OS Active Hub
+              </span>
+            )}
           </div>
         </div>
       )}
 
       {/* Primary Orchestration Stage */}
       <main className={screenIndex > 0 ? "pt-12" : ""}>
-        {appViewMode === 'FACILITATOR' ? (
+        {appViewMode === 'REYOU_HUB' ? (
+          <motion.div
+            key="reyou-hub"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            <ReyouHub />
+          </motion.div>
+        ) : appViewMode === 'FACILITATOR' ? (
           <motion.div
             key="facilitator"
             initial={{ opacity: 0, y: 15 }}
@@ -355,7 +380,11 @@ export default function App() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <Screen02Welcome onComplete={handleNextScreen} />
+              <Screen02Welcome
+                userName={userName}
+                setUserName={setUserName}
+                onComplete={handleNextScreen}
+              />
             </motion.div>
           )}
 

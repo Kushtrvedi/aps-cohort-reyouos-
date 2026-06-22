@@ -30,6 +30,28 @@ import {
 import { sounds } from '../utils/audio';
 import PrincipalConsole from './PrincipalConsole';
 import CohortImportCenter, { GeneratedCohortTeam } from './CohortImportCenter';
+import { 
+  initAuth, 
+  googleSignIn, 
+  logout, 
+  saveFileToFolder, 
+  findFolderByName, 
+  createFolder, 
+  listFilesFromFolder,
+  DriveFile
+} from '../utils/googleWorkspace';
+import { generateSchoolReportHTML } from '../utils/reportGenerator';
+import { User } from 'firebase/auth';
+import {
+  Cloud,
+  Upload,
+  Download,
+  FolderPlus,
+  Folder,
+  Share2,
+  ExternalLink
+} from 'lucide-react';
+
 
 // Extended Team interface representing cohesive psychological profile dimensions & interactive operations
 interface FacilitatorTeam {
@@ -164,6 +186,89 @@ export default function FacilitatorConsole() {
 
   const [activeTab, setActiveTab] = useState<'FACILITATOR' | 'PRINCIPAL'>('FACILITATOR');
   const [roomState, setRoomState] = useState<'NOMINAL' | 'STAGNANT' | 'DEBATING'>('STAGNANT');
+
+  // Google Workspace State inside Facilitator Console
+  const [googleUser, setGoogleUser] = useState<User | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const [driveSyncStatus, setDriveSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [driveSyncMessage, setDriveSyncMessage] = useState<string>('');
+  const [sharedFolderName, setSharedFolderName] = useState<string>('REYOU_Cohort_Performance_Hub');
+  const [archivedFiles, setArchivedFiles] = useState<DriveFile[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastAutosaveTime, setLastAutosaveTime] = useState<string>('');
+
+  // Fetch or find Folder & Files inside that Google Drive folder
+  const fetchArchivedFiles = async (token: string, searchFolder: string = 'REYOU_Cohort_Performance_Hub') => {
+    try {
+      const folderId = await findFolderByName(searchFolder, token);
+      if (folderId) {
+        setCurrentFolderId(folderId);
+        const files = await listFilesFromFolder(folderId, token);
+        setArchivedFiles(files);
+      } else {
+        setArchivedFiles([]);
+        setCurrentFolderId(null);
+      }
+    } catch (err) {
+      console.error('Failed to pre-fetch files:', err);
+    }
+  };
+
+  // Sync state with preflown storage setup on mount and track Google User
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        setGoogleUser(user);
+        setGoogleToken(token);
+        fetchArchivedFiles(token);
+      },
+      () => {
+        setGoogleUser(null);
+        setGoogleToken(null);
+        setArchivedFiles([]);
+        setCurrentFolderId(null);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    sounds.playClickSound();
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setGoogleUser(result.user);
+        setGoogleToken(result.accessToken);
+        setDriveSyncStatus('success');
+        setDriveSyncMessage(`Connected to Google Drive!`);
+        fetchArchivedFiles(result.accessToken);
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 4000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Authentication Failed: ${err.message || err}`);
+    }
+  };
+
+  const handleGoogleLogOut = async () => {
+    sounds.playClickSound();
+    await logout();
+    setGoogleUser(null);
+    setGoogleToken(null);
+    setArchivedFiles([]);
+    setCurrentFolderId(null);
+    setDriveSyncStatus('idle');
+    setDriveSyncMessage('Successfully disconnected account.');
+    setTimeout(() => setDriveSyncMessage(''), 4000);
+  };
+
+
+
   
   // Cohort live metrics, load from cache if exists
   const [teams, setTeams] = useState<FacilitatorTeam[]>(() => {
@@ -190,6 +295,16 @@ export default function FacilitatorConsole() {
   const [reflections, setReflections] = useState(INITIAL_REFLECTIONS);
   const [spotlightedReflection, setSpotlightedReflection] = useState<any>(INITIAL_REFLECTIONS[0]);
   const [showEndScreen, setShowEndScreen] = useState<boolean>(false);
+
+  // Inactivity alerts state
+  const [inactivityAlerts, setInactivityAlerts] = useState<{
+    id: string;
+    teamId: string;
+    teamName: string;
+    stage: string;
+    aiPrompt: string;
+    loading: boolean;
+  }[]>([]);
 
   // --- NVIDIA CO-PILOT SYSTEM INTEGRATION ---
   const [teamAnalysis, setTeamAnalysis] = useState<{
@@ -266,12 +381,252 @@ export default function FacilitatorConsole() {
     }
   }, [selectedTeamId]);
 
+  const handleFullCohortExportToDrive = async () => {
+    if (!googleToken) {
+      alert("Please connect Google Drive first.");
+      return;
+    }
+    sounds.playClickSound();
+    setDriveSyncStatus('syncing');
+    setDriveSyncMessage('Scanning for/creating custom shared folder in your Google Drive...');
+
+    try {
+      // 1. Find or create the target folder
+      let folderId = currentFolderId;
+      if (!folderId) {
+        folderId = await findFolderByName(sharedFolderName, googleToken);
+        if (!folderId) {
+          folderId = await createFolder(sharedFolderName, googleToken);
+        }
+        setCurrentFolderId(folderId);
+      }
+
+      // Formulate detailed export payload
+      const exportTimestamp = new Date().toISOString();
+      const exportId = `REYOU_COHORT_${Date.now()}`;
+      
+      const payload = {
+        meta: {
+          exportId,
+          exportedAt: exportTimestamp,
+          currentPhase,
+          phaseTitle,
+          totalTeams: teams.length,
+          roomState
+        },
+        simulationResults: teams.map(t => ({
+          teamId: t.id,
+          teamName: t.name,
+          profileName: t.profileName,
+          status: t.status,
+          discussion: t.discussion,
+          activeAssumption: t.activeAssumption,
+          activeBias: t.activeBias,
+          healthStatus: t.healthStatus,
+          lastActivityTime: new Date(t.lastActivityTime).toISOString(),
+          cuePrompt: t.cuePrompt
+        })),
+        teamActivityLogs: teams.map(t => ({
+          teamId: t.id,
+          teamName: t.name,
+          logCount: t.timeline?.length || 0,
+          events: t.timeline || []
+        })),
+        reflectionsStream: reflections,
+        copilotInsights: teamAnalysis || {
+          note: "No live analysis chunk loaded at time of save"
+        }
+      };
+
+      // 1. Save Programmatic JSON file
+      const jsonFilename = `${exportId}.json`;
+      await saveFileToFolder(folderId, jsonFilename, payload, googleToken);
+
+      // 2. Save Stunning HTML Document Report
+      const htmlFilename = `REYOU_Executive_School_Report_${Date.now()}.html`;
+      const htmlContent = generateSchoolReportHTML(
+        {
+          exportId,
+          exportedAt: exportTimestamp,
+          currentPhase,
+          phaseTitle,
+          roomState,
+          schoolName: "Founder Academy Global Council"
+        },
+        teams as any,
+        reflections as any,
+        teamAnalysis
+      );
+      const res = await saveFileToFolder(folderId, htmlFilename, htmlContent, googleToken);
+
+      if (res.success) {
+        setDriveSyncStatus('success');
+        setDriveSyncMessage(`Both documents saved! Saved programmatic JSON and gorgeous academic HTML Briefing inside Folder '${sharedFolderName}'.`);
+        sounds.playValidationChime();
+        fetchArchivedFiles(googleToken, sharedFolderName);
+        setTimeout(() => {
+          setDriveSyncStatus('idle');
+          setDriveSyncMessage('');
+        }, 6000);
+      } else {
+        throw new Error("Folder save procedure returned unsuccessful status");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setDriveSyncStatus('error');
+      setDriveSyncMessage(`Drive Folder upload failed: ${err.message || err}`);
+    }
+  };
+
+  // Continuous Cloud-Sync Auto-pilot effect (10-second idle debounce to protect rate limits and provide real-time assurance)
+  useEffect(() => {
+    if (!googleToken) return;
+
+    setAutosaveStatus('saving');
+    const delayTimer = setTimeout(async () => {
+      try {
+        let folderId = currentFolderId;
+        if (!folderId) {
+          folderId = await findFolderByName(sharedFolderName, googleToken);
+          if (!folderId) {
+            folderId = await createFolder(sharedFolderName, googleToken);
+          }
+          setCurrentFolderId(folderId);
+        }
+
+        const exportTimestamp = new Date().toISOString();
+        const exportId = `REYOU_AUTOSAVE_${Date.now()}`;
+        
+        const payload = {
+          meta: {
+            exportId,
+            exportedAt: exportTimestamp,
+            currentPhase,
+            phaseTitle,
+            totalTeams: teams.length,
+            roomState,
+            autoSynced: true
+          },
+          simulationResults: teams.map(t => ({
+            teamId: t.id,
+            teamName: t.name,
+            profileName: t.profileName,
+            status: t.status,
+            discussion: t.discussion,
+            activeAssumption: t.activeAssumption,
+            activeBias: t.activeBias,
+            healthStatus: t.healthStatus,
+            lastActivityTime: new Date(t.lastActivityTime).toISOString(),
+            cuePrompt: t.cuePrompt
+          })),
+          teamActivityLogs: teams.map(t => ({
+            teamId: t.id,
+            teamName: t.name,
+            logCount: t.timeline?.length || 0,
+            events: t.timeline || []
+          })),
+          reflectionsStream: reflections,
+          copilotInsights: teamAnalysis || {
+            note: "Continuous evaluation matrix snapshot"
+          }
+        };
+
+        // Sync direct programmatic metrics
+        await saveFileToFolder(folderId, `REYOU_AutoSync_LATEST_METRICS.json`, payload, googleToken);
+
+        // Sync visual HTML report in real-time
+        const htmlContent = generateSchoolReportHTML(
+          {
+            exportId,
+            exportedAt: exportTimestamp,
+            currentPhase,
+            phaseTitle,
+            roomState,
+            schoolName: "Founder Academy Global Council"
+          },
+          teams as any,
+          reflections as any,
+          teamAnalysis
+        );
+        await saveFileToFolder(folderId, `REYOU_Interactive_School_Report_LATEST.html`, htmlContent, googleToken);
+
+        setAutosaveStatus('saved');
+        setLastAutosaveTime(new Date().toLocaleTimeString());
+        
+        // Quietly update the ledger of stored files
+        fetchArchivedFiles(googleToken, sharedFolderName);
+      } catch (err) {
+        console.error("Autosaving failed dynamically:", err);
+        setAutosaveStatus('error');
+      }
+    }, 10000); // 10s debounce for perfect interaction-aware optimization
+
+    return () => clearTimeout(delayTimer);
+  }, [teams, reflections, currentPhase, googleToken, currentFolderId, sharedFolderName, roomState]);
+
   // Simulation 2 deployment controller
   const [isSim2Deployed, setIsSim2Deployed] = useState<boolean>(() => {
     return localStorage.getItem('reyou-sim2-deployed') === 'true';
   });
 
   useEffect(() => {
+    const handleInactivityNotification = async (payload: { teamId: string; stage: string; timestamp: number }) => {
+      const { teamId, stage } = payload;
+      const teamObj = INITIAL_COHORT_TEAMS.find(t => t.id === teamId);
+      const teamName = teamObj ? teamObj.name : teamId.replace("TEAM_", "");
+
+      // Avoid duplicates
+      setInactivityAlerts(prev => {
+        if (prev.some(a => a.teamId === teamId && a.stage === stage)) {
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: `${teamId}-${Date.now()}`,
+            teamId,
+            teamName,
+            stage,
+            aiPrompt: "Synthesizing dynamic rebound prompt for Team...",
+            loading: true
+          }
+        ];
+      });
+
+      try {
+        const response = await fetch("/api/reports/inactivity-reflection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamName, stage })
+        });
+        const data = await response.json();
+        if (data.success && data.prompt) {
+          setInactivityAlerts(prev =>
+            prev.map(alert =>
+              alert.teamId === teamId && alert.stage === stage
+                ? { ...alert, aiPrompt: data.prompt, loading: false }
+                : alert
+            )
+          );
+        } else {
+          throw new Error("Service error");
+        }
+      } catch (err) {
+        console.error("AI inactivity reflection synthesis failed, applying failsafe:", err);
+        setInactivityAlerts(prev =>
+          prev.map(alert =>
+            alert.teamId === teamId && alert.stage === stage
+              ? {
+                  ...alert,
+                  aiPrompt: `Team ${teamName}! Imagine your current decision faces a full market correction tomorrow. What critical cash buffer or flexibility is your group ignoring right now?`,
+                  loading: false
+                }
+              : alert
+          )
+        );
+      }
+    };
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'reyou-sim2-deployed') {
         setIsSim2Deployed(e.newValue === 'true');
@@ -281,6 +636,12 @@ export default function FacilitatorConsole() {
       }
       if (e.key === 'reyou-sim2-locked') {
         setSim2Locked(e.newValue === 'true');
+      }
+      if (e.key === 'reyou-team-inactivity' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          handleInactivityNotification(parsed);
+        } catch (err) {}
       }
     };
     
@@ -304,11 +665,19 @@ export default function FacilitatorConsole() {
       }
     };
 
+    const handleInactivityCustom = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        handleInactivityNotification(customEvent.detail);
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('reyou-sim2-deployed-changed', handleCustomEvent);
     window.addEventListener('reyou-sim1-locked-changed', handleSim1LockedEvent);
     window.addEventListener('reyou-sim2-locked-changed', handleSim2LockedEvent);
     window.addEventListener('reyou-cohort-imported', handleCohortEvents);
+    window.addEventListener('reyou-team-inactivity-dispatch', handleInactivityCustom);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -316,6 +685,7 @@ export default function FacilitatorConsole() {
       window.removeEventListener('reyou-sim1-locked-changed', handleSim1LockedEvent);
       window.removeEventListener('reyou-sim2-locked-changed', handleSim2LockedEvent);
       window.removeEventListener('reyou-cohort-imported', handleCohortEvents);
+      window.removeEventListener('reyou-team-inactivity-dispatch', handleInactivityCustom);
     };
   }, []);
 
@@ -889,6 +1259,84 @@ export default function FacilitatorConsole() {
             ) : (
               /* THE TRIPLE COMMAND CENTER MAIN VIEW */
               <div className="space-y-8">
+
+                {/* INACTIVITY ALERTS & AI REBOUND PROMPTS PANEL */}
+                {inactivityAlerts.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-5 bg-neutral-950 border border-[#D4AF37]/50 rounded-xs space-y-4"
+                  >
+                    <div className="flex items-center gap-2 border-l-2 border-[#D4AF37] pl-3">
+                      <span className="text-[10px] font-mono font-black text-[#D4AF37] tracking-widest uppercase">
+                        ⚠️ LIVE INACTIVITY DEVIANCES DETECTED (AI REBOUND ADVISOR)
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {inactivityAlerts.map((alert) => (
+                        <div 
+                          key={alert.id}
+                          className="p-4 bg-red-950/10 border border-[#D4AF37]/25 rounded-xs space-y-3 relative overflow-hidden"
+                        >
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" />
+                                <span className="text-xs font-mono font-extrabold text-white">
+                                  TEAM {alert.teamName.toUpperCase()} IS STAGNANT
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-neutral-400 font-mono">
+                                Stage: {alert.stage}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                sounds.playClickSound();
+                                setInactivityAlerts(prev => prev.filter(a => a.id !== alert.id));
+                              }}
+                              className="text-neutral-500 hover:text-white font-mono text-[9px] uppercase cursor-pointer transition-all border border-neutral-850 hover:border-neutral-600 px-2 py-0.5"
+                            >
+                              [Clear]
+                            </button>
+                          </div>
+
+                          <div className="bg-[#0A0A0A] border border-neutral-900 p-3 rounded-xs font-mono text-[11px] leading-relaxed">
+                            {alert.loading ? (
+                              <div className="flex items-center gap-2 text-[#D4AF37]">
+                                <span className="inline-block w-3 h-3 rounded-full border-2 border-t-transparent border-[#D4AF37] animate-spin" />
+                                <span className="animate-pulse">Synthesizing AI Breakout Prompt...</span>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="text-[9px] text-[#D4AF37] font-black tracking-widest block uppercase mb-1">
+                                  ✦ DYNAMIC REBOUND PROMPT
+                                </span>
+                                <p className="text-neutral-250 font-sans italic leading-normal">
+                                  "{alert.aiPrompt}"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {!alert.loading && (
+                            <button
+                              onClick={() => {
+                                dispatchNudge(alert.teamId, alert.aiPrompt);
+                                setInactivityAlerts(prev => prev.filter(a => a.id !== alert.id));
+                              }}
+                              className="w-full py-2 bg-[#D4AF37] hover:bg-yellow-500 text-black font-mono font-bold text-[10px] uppercase tracking-wider rounded-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              <span>⚡</span>
+                              <span>INJECT PROMPT TO TEAM {alert.teamName.toUpperCase()}</span>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
                 
                 {/* COHORT IMPORT CENTER - FIRST MODULE OF THE FACILITATOR HUB */}
                 <CohortImportCenter 
@@ -915,6 +1363,249 @@ export default function FacilitatorConsole() {
                   }}
                 />
                 
+                {/* GOOGLE DRIVE COHORT AGGREGATOR & ACTIVITY ARCHIVER - SCHOOL BOARD BRANDED */}
+                <div id="drive-aggregator-panel" className="bg-[#0c0d10] border border-[#D4AF37]/30 p-6 rounded-xs space-y-6 relative overflow-hidden">
+                  {/* Decorative background vectors for premium academic feel */}
+                  <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-b from-[#D4AF37]/5 to-transparent pointer-events-none rounded-full blur-3xl -mr-20 -mt-20" />
+                  
+                  <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative z-10">
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <div className="p-1.5 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-xs">
+                          <Cloud className="w-5 h-5 text-[#D4AF37]" strokeWidth={2.5} />
+                        </div>
+                        <span className="text-xs font-mono font-black text-[#D4AF37] tracking-widest uppercase pb-[2px]">
+                          FOUNDER ACADEMY CLOUD ARCHIVAL PLATFORM
+                        </span>
+                        
+                        {/* Interactive Autosave Engine indicator */}
+                        {googleUser && (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#0e1610] border border-emerald-900/40 rounded-full font-mono text-[9px]">
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              autosaveStatus === 'saving' ? 'bg-amber-400 animate-pulse' :
+                              autosaveStatus === 'saved' ? 'bg-emerald-450 animate-ping' :
+                              autosaveStatus === 'error' ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'
+                            }`} />
+                            <span className="text-neutral-400 uppercase tracking-wider">
+                              AUTOPILOT: {' '}
+                              <strong className={
+                                autosaveStatus === 'saving' ? 'text-amber-400' :
+                                autosaveStatus === 'saved' ? 'text-emerald-450' :
+                                autosaveStatus === 'error' ? 'text-red-400' : 'text-emerald-400'
+                              }>
+                                {autosaveStatus === 'saving' ? 'SYNCS_ENGAGED' :
+                                 autosaveStatus === 'saved' ? 'SECURED_OK' :
+                                 autosaveStatus === 'error' ? 'SUSPENDED' : 'ARMED'}
+                              </strong>
+                            </span>
+                            {lastAutosaveTime && (
+                              <span className="text-neutral-500 font-normal">({lastAutosaveTime})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[12.5px] text-neutral-350 font-sans leading-relaxed max-w-4xl">
+                        Autonomous cloud replication. Every phase update, student reflection, and team bias resolution triggers a debounced background sync. The system automatically creates two beautiful school records: a raw program database for programmatic analysis, and an executive standalone HTML performance briefing.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5 items-center shrink-0">
+                      {googleUser ? (
+                        <>
+                          <button
+                            onClick={handleFullCohortExportToDrive}
+                            disabled={driveSyncStatus === 'syncing'}
+                            className="px-4 py-2.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 hover:border-[#D4AF37] font-mono text-[10px] font-bold uppercase tracking-wider rounded-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                          >
+                            <Upload className="w-4 h-4 text-[#D4AF37]" strokeWidth={2.5} />
+                            <span>Export snapshot manually</span>
+                          </button>
+
+                          <button
+                            onClick={handleGoogleLogOut}
+                            className="px-3 py-2 text-neutral-500 hover:text-red-400 hover:bg-red-950/20 border border-neutral-900 font-mono text-[9px] font-bold uppercase tracking-wider rounded-xs transition-all cursor-pointer"
+                          >
+                            Disconnect
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={handleGoogleSignIn}
+                          className="gsi-material-button text-xs"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: '#0a0b0d',
+                            border: '1px solid rgba(212,175,55,0.45)',
+                            padding: '12px 20px',
+                            borderRadius: '1px',
+                            cursor: 'pointer',
+                            color: '#fff',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 600,
+                            letterSpacing: '0.05em'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ width: '18px', height: '18px' }}>
+                              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                              <path fill="none" d="M0 0h48v48H0z"></path>
+                            </svg>
+                            <span className="font-mono text-[10.5px] uppercase tracking-wider text-neutral-300 font-extrabold">Connect School Google Drive Directory</span>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {googleUser && (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pt-5 border-t border-neutral-850 relative z-10">
+                      
+                      {/* Left: configuration widget */}
+                      <div className="space-y-4 md:col-span-1 border-r border-neutral-900 pr-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-mono text-[#D4AF37] uppercase font-bold block tracking-wider">
+                            TARGET SHARED DIRECTORY:
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={sharedFolderName}
+                              onChange={(e) => setSharedFolderName(e.target.value.replace(/[^a-zA-Z0-9_\- ]/g, ''))}
+                              placeholder="REYOU_Cohort_Performance_Hub"
+                              className="flex-1 bg-black border border-neutral-800 rounded-xs text-xs font-mono text-white p-2.5 focus:border-[#D4AF37] focus:outline-none"
+                            />
+                            <button
+                              onClick={() => {
+                                sounds.playClickSound();
+                                if (googleToken) fetchArchivedFiles(googleToken, sharedFolderName);
+                              }}
+                              className="bg-neutral-900 hover:bg-[#151515] text-xs text-zinc-300 font-mono px-3.5 border border-neutral-800 active:scale-95 transition-all rounded-xs cursor-pointer"
+                              title="Update target folder destination"
+                            >
+                              Set
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Informative educational mapping list */}
+                        <div className="space-y-2 bg-[#08090a] p-3 border border-neutral-900 rounded-xs">
+                          <span className="text-[9px] font-mono text-neutral-450 uppercase font-black tracking-widest block">
+                            REPORT EXPORT MATRIX:
+                          </span>
+                          <div className="space-y-1.5 text-[10.5px] text-neutral-400 font-sans">
+                            <div className="flex justify-between items-center">
+                              <span>• Programmatic JSON:</span>
+                              <span className="text-[#D4AF37] font-mono font-bold">RAWSTATE_DB</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span>• Standing Academic HTML:</span>
+                              <span className="text-[#D4AF37] font-mono font-bold">OECD_PORTFOLIO</span>
+                            </div>
+                            <div className="text-[9px] text-neutral-500 italic mt-1 leading-normal">
+                              Fully printable, inline-styled elements with radar mapping. Suitable for PDF rendering & board aggregation.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: archived list with directory header */}
+                      <div className="md:col-span-3 space-y-2.5">
+                        <span className="text-[10px] font-mono text-neutral-450 uppercase font-black block tracking-widest">
+                          FOLDER ARCHIVE SECTORS LEDGER ({archivedFiles.length} file streams)
+                        </span>
+                        
+                        {archivedFiles.length === 0 ? (
+                          <div className="text-[11px] font-mono text-neutral-500 italic p-6 border border-dashed border-neutral-850 bg-black/40 rounded-xs text-center">
+                            No active performance reports or auto-synchronized structures discovered inside '{sharedFolderName}'. Export manually or let the autopilot secure the workspace to start aggregation.
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[190px] overflow-y-auto pr-1">
+                            {archivedFiles.map((file) => {
+                              const isHtml = file.name.endsWith('.html');
+                              const isLatest = file.name.includes('_LATEST');
+                              
+                              return (
+                                <div
+                                  key={file.id}
+                                  className={`flex justify-between items-center p-3 rounded-xs border transition-all font-mono text-[10.5px] ${
+                                    isLatest ? 'bg-[#0f1115] border-[#D4AF37]/30 hover:border-[#D4AF37]/60' : 'bg-black/60 border-neutral-900 hover:border-neutral-800'
+                                  }`}
+                                >
+                                  <div className="space-y-1.5 min-w-0 flex-1 truncate pr-3">
+                                    <div className="flex items-center gap-1.5">
+                                      {isHtml ? (
+                                        <span className="px-1.5 py-0.5 text-[8px] bg-[#D4AF37]/10 text-[#D4AF37] rounded-xs font-black uppercase text-center scale-90 tracking-wider">
+                                          HTML REPORT
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.5 text-[8px] bg-neutral-800 text-neutral-400 rounded-xs font-black uppercase text-center scale-90 tracking-wider">
+                                          JSON DATA
+                                        </span>
+                                      )}
+                                      
+                                      {isLatest && (
+                                        <span className="px-1 py-0.5 text-[8px] bg-emerald-950 text-emerald-400 rounded-xs font-bold text-center scale-90 tracking-widest">
+                                          LIVE SYNC
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-zinc-200 block truncate font-semibold" title={file.name}>
+                                      {file.name}
+                                    </span>
+                                    <span className="text-[9.5px] text-neutral-500 block">
+                                      Secured: {new Date(file.modifiedTime).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <a
+                                    href={`https://drive.google.com/open?id=${file.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => sounds.playClickSound()}
+                                    className="p-1.5 px-2 bg-[#D4AF37]/5 hover:bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25 hover:border-[#D4AF37]/50 rounded-xs flex items-center gap-1 cursor-pointer shrink-0 transition-all text-[10px] font-bold"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <span>OPEN IN DRIVE</span>
+                                  </a>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {driveSyncMessage && (
+                    <div className={`p-4 rounded-xs border font-mono text-[11px] flex items-center justify-between select-none animate-fadeIn relative z-10 ${
+                      driveSyncStatus === 'syncing' ? 'bg-[#12110d] border-yellow-800/30 text-[#D4AF37] border-l-2 border-l-[#D4AF37]' :
+                      driveSyncStatus === 'success' ? 'bg-emerald-950/10 border-emerald-900/30 text-emerald-450 border-l-2 border-l-emerald-500' :
+                      driveSyncStatus === 'error' ? 'bg-red-950/15 border-red-900/30 text-red-100 border-l-2 border-l-red-500' : 'bg-neutral-900/50 border-neutral-800 text-neutral-300'
+                    }`}>
+                      <div className="flex items-center gap-2.5">
+                        {driveSyncStatus === 'syncing' ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#D4AF37]" />
+                        ) : driveSyncStatus === 'success' ? (
+                          <span className="text-emerald-450 font-bold text-sm">✓</span>
+                        ) : driveSyncStatus === 'error' ? (
+                          <span className="text-red-400 font-bold text-sm">✕</span>
+                        ) : null}
+                        <span>{driveSyncMessage}</span>
+                      </div>
+                      <button 
+                        onClick={() => setDriveSyncMessage('')}
+                        className="text-neutral-500 hover:text-white font-bold cursor-pointer transition-all px-1.5"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {/* 3-COLUMN LAYOUT ALIGNED TO ARCHITECTURE PRINCIPLES */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   

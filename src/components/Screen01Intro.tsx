@@ -29,23 +29,40 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
   }, [step]);
 
   // Generate simple, slow-moving premium floating gold particles
-  const particles = Array.from({ length: 15 }).map((_, i) => ({
+  const particles = Array.from({ length: 25 }).map((_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
-    size: Math.random() * 3 + 2,
-    delay: Math.random() * 5,
-    duration: Math.random() * 10 + 12,
+    size: Math.random() * 2 + 1.5,
+    delay: Math.random() * 6,
+    duration: Math.random() * 12 + 14,
   }));
 
+  const [checkInCount, setCheckInCount] = useState(195);
+
+  useEffect(() => {
+    // Dynamic countdown count-up ticker for check-in founders to feel live and organic
+    const interval = setInterval(() => {
+      setCheckInCount(prev => {
+        if (prev < 198) {
+          sounds.playTickingSound();
+          return prev + 1;
+        }
+        clearInterval(interval);
+        return prev;
+      });
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#111111] flex flex-col justify-between items-center p-8 md:p-16 relative overflow-hidden select-none font-serif">
-      {/* Subtle Floating Gold Particles */}
+    <div className="min-h-screen bg-[#0B1020] text-[#FFFFFF] flex flex-col justify-between items-center p-6 md:p-12 relative overflow-hidden select-none font-sans">
+      {/* Subtle Floating Gold/Slate Particles */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         {particles.map((p) => (
           <motion.div
             key={p.id}
-            className="absolute rounded-full bg-[#D4AF37]/25"
+            className="absolute rounded-full bg-[#D4AF37]/20"
             style={{
               left: `${p.x}%`,
               top: `${p.y}%`,
@@ -53,9 +70,9 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
               height: `${p.size}px`,
             }}
             animate={{
-              y: ['0px', '-120px', '0px'],
-              x: ['0px', '40px', '0px'],
-              opacity: [0.1, 0.6, 0.1],
+              y: ['0px', '-180px', '0px'],
+              x: ['0px', '50px', '0px'],
+              opacity: [0.1, 0.55, 0.1],
             }}
             transition={{
               duration: p.duration,
@@ -67,30 +84,64 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
         ))}
       </div>
 
+      {/* Outer Immersive Glow from Orb */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.06)_0%,transparent_70%)] pointer-events-none z-0" />
+
       {/* Header and status info */}
-      <div className="w-full flex justify-between items-center text-[9px] font-mono tracking-widest text-[#D4AF37] font-extrabold z-10 select-none">
-        <span className="uppercase">REYOU SYSTEM ACTIVE • APS COHORT</span>
-        <span className="uppercase">STAGE 01</span>
+      <div className="w-full flex justify-between items-center text-[10px] font-mono tracking-widest text-[#AAB2C8] font-bold z-10 select-none">
+        <span className="uppercase text-[#D4AF37]">REYOU OS V2.6 • PRE-INTEGRATED</span>
+        <span className="uppercase bg-[#D4AF37]/15 px-3 py-1 border border-[#D4AF37]/30 rounded-xs text-[#D4AF37]">SYSTEM ACTIVE</span>
       </div>
 
       {/* Center Screen */}
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[450px] w-full max-w-2xl text-center z-10 relative">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[460px] w-full max-w-2xl text-center z-10 relative">
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div
               key="brand"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.04, filter: 'blur(8px)' }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-6"
+              className="space-y-8 flex flex-col items-center"
             >
-              <h2 className="text-[11px] font-mono uppercase tracking-[0.40em] text-[#D4AF37] font-black">
-                REYOU EDUCATION
-              </h2>
-              <h1 className="text-4xl md:text-5xl font-display font-semibold tracking-wide text-[#111111] uppercase leading-tight font-sans">
-                APS FOUNDER COHORT
-              </h1>
+              {/* Massive Breathing Gold Interactive Orb */}
+              <div className="relative w-36 h-36 mb-4 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#D4AF37]/10 rounded-full blur-xl animate-pulse" />
+                <div className="absolute inset-2 border border-[#D4AF37]/20 rounded-full animate-spin [animation-duration:15s]" />
+                <div className="absolute inset-4 border border-[#AAB2C8]/10 rounded-full animate-spin [animation-duration:25s] [animation-direction:reverse]" />
+                <div className="w-16 h-16 rounded-full bg-[radial-gradient(circle_at_center,#F3D070_0%,#D4AF37_60%,#AA8310_100%)] shadow-[0_0_40px_rgba(212,175,55,0.45)] animate-breathe" />
+              </div>
+
+              <div className="space-y-3">
+                <span className="text-[10px] font-mono uppercase tracking-[0.45em] text-[#D4AF37] font-extrabold bg-[#D4AF37]/10 py-1 px-4 border border-[#D4AF37]/20 rounded-sm">
+                  REYOU FOUNDER COHORT
+                </span>
+                <h1 className="text-4xl md:text-5xl font-sans tracking-tight text-white uppercase font-black">
+                  Army Public School
+                </h1>
+                <h2 className="text-sm font-mono tracking-[0.25em] text-[#AAB2C8] uppercase font-semibold">
+                  Decision Intelligence Mission & Future Readiness
+                </h2>
+              </div>
+
+              {/* Status Readiness Indicators */}
+              <div className="pt-6 grid grid-cols-2 gap-4 w-full max-w-md mx-auto">
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-sm text-left">
+                  <span className="block text-[8px] font-mono text-neutral-500 uppercase tracking-widest">COHORT STATUS</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" />
+                    <span className="text-sm font-mono text-[#D4AF37] font-black uppercase tracking-wider">READY</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-sm text-left">
+                  <span className="block text-[8px] font-mono text-neutral-500 uppercase tracking-widest">REGISTRATION INDEX</span>
+                  <span className="text-sm font-mono text-white mt-1 block font-black">
+                    <span className="text-[#D4AF37]">{checkInCount}</span> <span className="text-neutral-500">/ 200</span> Checked In
+                  </span>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -101,54 +152,62 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-4 max-w-md mx-auto"
+              className="space-y-6 max-w-md mx-auto flex flex-col items-center"
             >
+              {/* Gentle breathing orb in step 2 too */}
+              <div className="w-8 h-8 rounded-full bg-[#D4AF37] blur-sm opacity-60 animate-breathe" />
+
               <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-[#D4AF37] font-black">
-                TODAY
+                TODAY IS THE DAY
               </p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold leading-relaxed text-[#111111] uppercase select-none font-sans">
-                you will think
-              </h2>
-              <h2 className="text-2xl md:text-3xl font-display font-bold leading-relaxed text-[#111111] uppercase select-none font-sans">
-                debate
-              </h2>
-              <h2 className="text-2xl md:text-3xl font-display font-bold leading-relaxed text-[#111111] uppercase select-none font-sans">
-                decide
-              </h2>
-              <h2 className="text-2xl md:text-3xl font-display font-bold leading-relaxed text-[#111111] uppercase select-none font-sans flex items-center justify-center gap-1.5 font-sans">
-                and defend
-              </h2>
+              <div className="space-y-2 uppercase text-neutral-200">
+                <h2 className="text-2xl md:text-3xl font-sans font-black tracking-wider text-white">
+                  you will think
+                </h2>
+                <h2 className="text-2xl md:text-3xl font-sans font-normal tracking-wide text-neutral-300">
+                  debate & align
+                </h2>
+                <h2 className="text-2xl md:text-3xl font-sans font-black tracking-normal text-[#D4AF37] flex items-center justify-center gap-1.5">
+                  decide
+                </h2>
+                <h2 className="text-xl md:text-2xl font-mono tracking-[0.1em] text-neutral-400">
+                  & defend your choices
+                </h2>
+              </div>
             </motion.div>
           )}
 
           {step === 2 && (
             <motion.div
               key="cta"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
               className="space-y-8 flex flex-col items-center"
             >
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono tracking-widest uppercase text-neutral-450 font-bold block mb-1">
-                  TRANSITION GATEWAY
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-[#D4AF37] font-semibold block bg-[#D4AF37]/5 px-3 py-1 border border-[#D4AF37]/10 rounded-sm">
+                  TRANSITION GATEWAY PROTOCOL
                 </span>
-                <p className="text-2xl md:text-3xl font-display font-medium text-[#111111] leading-relaxed uppercase font-sans">
-                  Your team is waiting.
+                <p className="text-xl md:text-2xl font-sans font-bold text-white uppercase tracking-tight">
+                  Your board seat is verified.
+                </p>
+                <p className="text-xs text-[#AAB2C8] leading-relaxed max-w-sm mx-auto">
+                  APS Bhopal XII Batch: 40 simulated boardroom rooms of peer leaders are active. Let's make every choice secure.
                 </p>
               </div>
 
               <motion.button
                 id="begin-cohort-btn"
-                whileHover={{ scale: 1.03, boxShadow: '0 0 25px rgba(212,175,55,0.25)' }}
+                whileHover={{ scale: 1.03, boxShadow: '0 0 25px rgba(212,175,55,0.3)' }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   sounds.playValidationChime();
                   onComplete();
                 }}
-                className="border-2 border-[#D4AF37] text-[#D4AF37] bg-white font-mono hover:bg-[#D4AF37] hover:text-white text-[11px] py-4 px-12 tracking-[0.3em] font-extrabold uppercase transition-all duration-500 rounded-xs shadow-[0_4px_15px_rgba(212,175,55,0.08)] cursor-pointer select-none font-black"
+                className="bg-[#D4AF37] text-neutral-950 font-mono hover:bg-yellow-500 text-[11px] py-4.5 px-14 tracking-[0.3em] font-extrabold uppercase transition-all duration-300 rounded-sm shadow-[0_4px_25px_rgba(212,175,55,0.25)] cursor-pointer select-none font-black"
               >
-                BEGIN COHORT
+                ACTIVATE PROFILE
               </motion.button>
             </motion.div>
           )}
@@ -156,8 +215,8 @@ export default function Screen01Intro({ onComplete }: Screen01IntroProps) {
       </div>
 
       {/* Corporate Boardroom Signature line */}
-      <div className="w-full text-center text-[9px] font-mono text-neutral-400 tracking-widest uppercase z-10 select-none">
-        HARVARD LEADERSHIP LABS • EXECUTIVE ACCELERATOR
+      <div className="w-full text-center text-[10px] font-mono text-[#AAB2C8] opacity-50 tracking-widest uppercase z-10 select-none">
+        REYOU SCHOOL OPERATING SYSTEM • EMPOWERING INDEPENDENCE
       </div>
     </div>
   );

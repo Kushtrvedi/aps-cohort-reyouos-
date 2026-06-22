@@ -10,7 +10,8 @@ import {
   generateTeamAnalysis,
   generatePhaseSummary,
   generatePrincipalLiveFeed,
-  generatePrincipalQueryResponse
+  generatePrincipalQueryResponse,
+  generateInactivityReflectionPrompt
 } from "./server/services/nvidia";
 
 async function startServer() {
@@ -20,7 +21,135 @@ async function startServer() {
   // Parsers
   app.use(express.json());
 
+  // In-Memory Database for dynamic Spotlight Exchange / Peer decisions
+  const teamDecisions: Array<{
+    decisionId: string;
+    teamId: string;
+    teamName: string;
+    choice: string;
+    reasoning: string;
+  }> = [];
+
+  // Seed data matching APS Bhopal Grade XII leaders of thought
+  const seedDecisions = [
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_ALPHA",
+      teamName: "TEAM JHANSI",
+      choice: "PRACTICAL",
+      reasoning: "Renting a high-end flat without deep emergency savings leaves no resilience factor. We prefer building solid base capital first to resolve debts."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_BRAVO",
+      teamName: "TEAM BHAGAT",
+      choice: "PRACTICAL",
+      reasoning: "With serious outstanding student debt balances, locking ourselves into premium high-rent suites is financial suicide. Debt clearance always precedes lifestyle expansion."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_CHARLIE",
+      teamName: "TEAM CHANAKYA",
+      choice: "PRACTICAL",
+      reasoning: "By choosing a practical budget flat, we allocate the 24% rental savings difference directly toward early mutual fund investments. Every rupee compounded early yields immense long-term protection."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_DELTA",
+      teamName: "TEAM AZAD",
+      choice: "PREMIUM",
+      reasoning: "A premium flat nearby reduces commute times by 3 hours daily. Traveling in hot buses degrades focus and health. In the long run, our productivity and energy level is our most valuable asset to secure high-tier promotions."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_ECHO",
+      teamName: "TEAM NETAJI",
+      choice: "PRACTICAL",
+      reasoning: "We prioritize establishing high-liquidity capital accounts over personal room luxury. In volatile corporate environments, a strong immediate emergency buffer provides absolute psychological leverage."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_FOXTROT",
+      teamName: "TEAM PATEL",
+      choice: "PRACTICAL",
+      reasoning: "Avoiding monthly overhead stress ensures higher long-term safety. A practical flat means we are insulated against sudden salary cuts or black swan health events."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_GOLF",
+      teamName: "TEAM KALAM",
+      choice: "PRACTICAL",
+      reasoning: "We prefer to trade temporary lifestyle luxury for continuous tech skill investments. The rent difference is redirected straight into cloud engineering and AI certifications that boost our long-term earning ceiling."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_HOTEL",
+      teamName: "TEAM VIVEKANANDA",
+      choice: "PREMIUM",
+      reasoning: "A pristine environment with high ambient stability elevates sleep quality, physical wellness, and creative energy. Investing in our baseline safety is a form of self-directed value maximization."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_INDIA",
+      teamName: "TEAM SHIVAJI",
+      choice: "PREMIUM",
+      reasoning: "High-end locations offer premium networking circles and proximity to corporate partner offices. We leverage our address and lifestyle to create faster relationship momentum."
+    },
+    {
+      decisionId: "DECISION_2",
+      teamId: "TEAM_JULIET",
+      teamName: "TEAM BOSE",
+      choice: "PREMIUM",
+      reasoning: "Living in a prime tech corridor gives us immediate access to meetups and workspace hubs. We prioritize speed and professional density over conservative savings."
+    }
+  ];
+
   // API Routes
+  app.get("/api/decisions", (req, res) => {
+    try {
+      const { decisionId } = req.query;
+      if (!decisionId) {
+        return res.status(400).json({ success: false, error: "Missing decisionId" });
+      }
+
+      // Filter submissions and seed data
+      const actualList = teamDecisions.filter(d => d.decisionId === decisionId);
+      const filteredSeeds = seedDecisions.filter(s => s.decisionId === (decisionId as string) && !actualList.some(a => a.teamId === s.teamId));
+
+      res.json({
+        success: true,
+        decisions: [...actualList, ...filteredSeeds]
+      });
+    } catch (error: any) {
+      console.error("Error fetching decisions:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.post("/api/decisions", (req, res) => {
+    try {
+      const { decisionId, teamId, teamName, choice, reasoning } = req.body;
+      if (!decisionId || !teamId || !choice || !reasoning) {
+        return res.status(400).json({ success: false, error: "Missing required fields" });
+      }
+
+      // Remove existing for this team and decision to update
+      const index = teamDecisions.findIndex(d => d.decisionId === decisionId && d.teamId === teamId);
+      const entry = { decisionId, teamId, teamName: teamName || teamId, choice, reasoning };
+
+      if (index !== -1) {
+        teamDecisions[index] = entry;
+      } else {
+        teamDecisions.push(entry);
+      }
+
+      res.json({ success: true, message: "Decision registered successfully" });
+    } catch (error: any) {
+      console.error("Error creating decision:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   app.post("/api/reports/team-analysis", async (req, res) => {
     try {
       const data = req.body;
@@ -115,6 +244,17 @@ async function startServer() {
       res.json({ success: true, answer });
     } catch (error: any) {
       console.error("Error in principal custom query API:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.post("/api/reports/inactivity-reflection", async (req, res) => {
+    try {
+      const { teamName, stage } = req.body;
+      const prompt = await generateInactivityReflectionPrompt(teamName, stage);
+      res.json({ success: true, prompt });
+    } catch (error: any) {
+      console.error("Error in inactivity reflection API:", error);
       res.status(500).json({ success: false, error: error.message });
     }
   });

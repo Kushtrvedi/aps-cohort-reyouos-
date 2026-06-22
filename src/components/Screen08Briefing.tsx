@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RoleId, TEAMS } from '../types';
 import { sounds } from '../utils/audio';
 import { Orb, Canvas } from './BreathingOrb';
+import { useTeamActivityMonitor } from './useTeamActivityMonitor';
 import { 
   SVGSalaryNotification, 
   SVGApartmentComparison, 
@@ -716,6 +717,54 @@ export default function Screen08Briefing({
   const [spotlightReaction, setSpotlightReaction] = useState<string>(() => {
     return localStorage.getItem('reyou-spotlight-reaction') || '';
   });
+  const [peerDecisions, setPeerDecisions] = useState<Array<{
+    decisionId: string;
+    teamId: string;
+    teamName: string;
+    choice: string;
+    reasoning: string;
+  }>>([]);
+  const [loadingPeerDecisions, setLoadingPeerDecisions] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (showSpotlightExchange) {
+      const saveAndFetch = async () => {
+        setLoadingPeerDecisions(true);
+        // Post current decision reasoning first
+        try {
+          const profile = PROFILES[selectedTeamId] || PROFILES.TEAM_ALPHA;
+          await fetch('/api/decisions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              decisionId: 'DECISION_2',
+              teamId: selectedTeamId,
+              teamName: profile.teamName,
+              choice: decision2 || 'PRACTICAL',
+              reasoning: decision2Assumption
+            })
+          });
+        } catch (e) {
+          console.error("Failed to register decision first:", e);
+        }
+
+        // Fetch overall decisions list
+        try {
+          const res = await fetch('/api/decisions?decisionId=DECISION_2');
+          const data = await res.json();
+          if (data.success && data.decisions) {
+            setPeerDecisions(data.decisions);
+          }
+        } catch (e) {
+          console.error("Failed to fetch peer decisions:", e);
+        } finally {
+          setLoadingPeerDecisions(false);
+        }
+      };
+
+      saveAndFetch();
+    }
+  }, [showSpotlightExchange, selectedTeamId, decision2, decision2Assumption]);
 
   // Decision 3 states
   const [decision3, setDecision3] = useState<'INVEST' | 'INVESTIGATE' | 'IGNORE' | null>(null);
@@ -731,6 +780,21 @@ export default function Screen08Briefing({
   // Facilitator real-time spotlight broadcast capture
   const [broadcastedReflection, setBroadcastedReflection] = useState<{ id: number; author: string; text: string } | null>(null);
   const [showBroadcastToast, setShowBroadcastToast] = useState<boolean>(false);
+
+  // Track team activity in Simulation 1
+  useTeamActivityMonitor(selectedTeamId, `Simulation 1: Phase ${phase} (Step ${phase1Step})`, [
+    phase,
+    phase1Step,
+    decision1,
+    decision1Why,
+    decision2,
+    decision2Assumption,
+    decision3,
+    decision3Evidence,
+    reflectionSurprised,
+    reflectionFailed,
+    reflectionDifferently
+  ]);
 
   // Persist decisions to local storage for Simulation 2 live outcomes and report generation
   useEffect(() => {
@@ -1476,25 +1540,100 @@ export default function Screen08Briefing({
                     Other cohorts made opposite decisions based on contrasting, yet valid mental models:
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white/5 border border-white/5 p-5 rounded-sm space-y-2">
-                      <span className="text-[9px] font-mono bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">
-                        Team Kalam • Selected Practical Flat
-                      </span>
-                      <p className="text-xs text-neutral-300 leading-relaxed font-sans">
-                        "We prioritized capital safety above all else. Renting a premium flat with low savings leaves no margin for safety. If an emergency happens, you have no buffer and you are instantly trapped."
+                  {loadingPeerDecisions ? (
+                    <div className="flex flex-col items-center justify-center py-16 space-y-4 border border-dashed border-[#D4AF37]/20 bg-black/40 rounded-sm">
+                      <div className="w-6 h-6 rounded-full border-r-2 border-l-2 border-[#D4AF37] animate-spin" />
+                      <p className="font-mono text-[10px] text-neutral-400 tracking-widest animate-pulse uppercase">
+                        Establishing Real-time Cohort Sync Protocol...
                       </p>
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Left Column: Practical flat advocates */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 border-b border-emerald-500/20 pb-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                          <h3 className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-widest">
+                            Practical Flat Advocates ({peerDecisions.filter(d => d.choice === 'PRACTICAL').length})
+                          </h3>
+                        </div>
+                        <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                          {peerDecisions.filter(d => d.choice === 'PRACTICAL').map((peer) => {
+                            const isCurrent = peer.teamId === selectedTeamId;
+                            return (
+                              <div 
+                                key={peer.teamId} 
+                                className={`p-4 rounded-sm bg-neutral-900/60 border text-xs space-y-2.5 transition-all ${
+                                  isCurrent 
+                                    ? 'border-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.06)]' 
+                                    : 'border-white/5 text-neutral-300'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <strong className="font-mono tracking-wider text-white uppercase text-[10.5px]">
+                                    {peer.teamName}
+                                  </strong>
+                                  {isCurrent && (
+                                    <span className="text-[7.5px] font-mono text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 border border-[#D4AF37]/35 rounded uppercase font-bold tracking-widest">
+                                      Our Team
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="font-serif italic leading-relaxed text-neutral-400">
+                                  "{peer.reasoning}"
+                                </p>
+                              </div>
+                            );
+                          })}
+                          {peerDecisions.filter(d => d.choice === 'PRACTICAL').length === 0 && (
+                            <p className="text-[10px] text-neutral-600 font-mono italic">No cohorts matched this preference.</p>
+                          )}
+                        </div>
+                      </div>
 
-                    <div className="bg-white/5 border border-white/5 p-5 rounded-sm space-y-2">
-                       <span className="text-[9px] font-mono bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider">
-                        Team Azad • Selected Premium Flat
-                      </span>
-                      <p className="text-xs text-neutral-300 leading-relaxed font-sans">
-                        "We chose mental well-being and space to focus. Traveling 1.5 hours in a hot bus every single day causes extreme cognitive fatigue. Burnout is a massive financial and emotional risk too."
-                      </p>
+                      {/* Right Column: Premium Residences advocates */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 border-b border-[#D4AF37]/20 pb-2">
+                          <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+                          <h3 className="text-xs font-mono font-bold text-[#D4AF37] uppercase tracking-widest">
+                            Premium Flat Advocates ({peerDecisions.filter(d => d.choice === 'PREMIUM').length})
+                          </h3>
+                        </div>
+                        <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                          {peerDecisions.filter(d => d.choice === 'PREMIUM').map((peer) => {
+                            const isCurrent = peer.teamId === selectedTeamId;
+                            return (
+                              <div 
+                                key={peer.teamId} 
+                                className={`p-4 rounded-sm bg-neutral-900/60 border text-xs space-y-2.5 transition-all ${
+                                  isCurrent 
+                                    ? 'border-[#D4AF37] bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.06)]' 
+                                    : 'border-white/5 text-neutral-300'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <strong className="font-mono tracking-wider text-white uppercase text-[10.5px]">
+                                    {peer.teamName}
+                                  </strong>
+                                  {isCurrent && (
+                                    <span className="text-[7.5px] font-mono text-[#D4AF37] bg-[#D4AF37]/10 px-1.5 py-0.5 border border-[#D4AF37]/35 rounded uppercase font-bold tracking-widest">
+                                      Our Team
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="font-serif italic leading-relaxed text-neutral-400">
+                                  "{peer.reasoning}"
+                                </p>
+                              </div>
+                            );
+                          })}
+                          {peerDecisions.filter(d => d.choice === 'PREMIUM').length === 0 && (
+                            <p className="text-[10px] text-neutral-600 font-mono italic">No cohorts matched this preference.</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="space-y-2 border-t border-white/10 pt-4">
                     <label className="text-[10px] font-mono text-[#D4AF37] uppercase block tracking-wider font-black">
