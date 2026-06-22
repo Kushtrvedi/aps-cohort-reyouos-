@@ -23,7 +23,7 @@ const SCREEN_STEPS = [
   { id: 'TEAM', title: 'Team Assignment' },
   { id: 'ROLE', title: 'Role Assignment' },
   { id: 'HUDDLE', title: 'Team Alignment' },
-  { id: 'PRINCIPLE', title: 'Lab Protocol' },
+  { id: 'PRINCIPLE', title: 'Lab Guidelines' },
   { id: 'OATH', title: 'Boardroom Activation' },
   { id: 'BRIEFING', title: 'Simulation 01' },
   { id: 'SIMULATION2', title: 'Simulation 02' },

@@ -120,7 +120,7 @@ const INITIAL_STUDENTS_FEEDBACK: StudentFeedback[] = [
     relevantLife: 5,
     recommend: 5,
     learningTopics: ['Decision Making', 'Leadership', 'Scams'],
-    decisionComments: 'The Spotlight protocol forced us to address competing designs. Our peers made us realize travel time is a true liability.',
+    decisionComments: 'The Spotlight practice forced us to address competing designs. Our peers made us realize travel time is a true liability.',
     npsScore: 10,
     timestamp: '2026-06-22 11:05'
   },
@@ -626,10 +626,10 @@ export default function ReyouHub() {
           
           <nav className="space-y-1.5">
             {[
-              { id: 'STUDENT_FEEDBACK', label: '1. Student Feedback Portal', icon: Users },
-              { id: 'TEACHER_FEEDBACK', label: '2. Teacher Feedback Portal', icon: BookOpen },
+              { id: 'STUDENT_FEEDBACK', label: '1. Student Experience Portal', icon: Users },
+              { id: 'TEACHER_FEEDBACK', label: '2. Teacher Observation Portal', icon: BookOpen },
               { id: 'PRINCIPAL_DASHBOARD', label: '3. Principal Dashboard', icon: BarChart3 },
-              { id: 'NPS_ENGINE', label: '4. NPS Evaluation Engine', icon: ShieldCheck },
+              { id: 'NPS_ENGINE', label: '4. NPS Feedback & Insights', icon: ShieldCheck },
               { id: 'CERTIFICATE_GEN', label: '5. Distinction Certificate', icon: Award },
               { id: 'PHOTO_GALLERY', label: '6. Live Laboratory Photos', icon: Camera },
               { id: 'TESTIMONIAL_COLLECT', label: '7. Testimonials Wall', icon: MessageSquare },
@@ -665,20 +665,20 @@ export default function ReyouHub() {
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 1
+                  STUDENT EXPERIENCE MODULE
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
-                  Grade XII Student Feedback Portal
+                  Grade XII Student Feedback & Reflection
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Collects real-time quantitative rating and custom reflection datasets following OECD self-directed educational matrices.
+                  Share your active thoughts, learnings, and personal milestones under our OECD self-directed learning guidelines.
                 </p>
               </div>
 
               {studentSuccessMsg && (
                 <div className="bg-emerald-950/40 border border-emerald-500/50 text-emerald-400 p-4 rounded-sm text-xs font-mono flex items-center gap-3">
                   <Check className="w-4 h-4" />
-                  Student submission saved to local state! Principal Dashboard and NPS Engine recalculated inside active memory.
+                  Student submission saved successfully! Principal Dashboard and NPS reflection graphs updated in active memory.
                 </div>
               )}
 
@@ -871,13 +871,13 @@ export default function ReyouHub() {
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 2
+                  TEACHER OBSERVATION MODULE
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
-                  Academic Teacher Feedback Portal
+                  Academic Teacher Insights Portal
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Provides teachers a robust interface to evaluate peer alignment, curriculum relevance, and leadership performance.
+                  Allows our educators and coordinators to observe student alignment, critical debate quality, and dynamic team choices.
                 </p>
               </div>
 
@@ -1005,13 +1005,13 @@ export default function ReyouHub() {
               <div className="border-b border-white/5 pb-4 flex justify-between items-center flex-wrap gap-4">
                 <div>
                   <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                    System 3 Executive View
+                    PRINCIPAL VIEW & INDICATORS
                   </span>
                   <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
                     Dr. Sandeep Kumar’s Principal Dashboard
                   </h2>
                   <p className="text-xs text-neutral-400 mt-1">
-                    An analytical command deck tracking development performance and decision scores across Army Public School Bhopal.
+                    An overview tracking pupil decision-making progress and teamwork ratings across Army Public School Bhopal.
                   </p>
                 </div>
                 
@@ -1144,18 +1144,18 @@ export default function ReyouHub() {
             </div>
           )}
 
-          {/* MODULE 4: NPS Evaluation Engine */}
+          {/* MODULE 4: NPS Feedback & Insights */}
           {activeTab === 'NPS_ENGINE' && (
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 4
+                  SURVEY FEEDBACK INSIGHTS
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
-                  Net Promoter Score (NPS) Evaluation Engine
+                  Net Promoter Score (NPS) Reflection
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  A high-fidelity audit tool designed to evaluate institutional satisfaction levels and predict expansion vectors.
+                  A pure, student-focused metric designed to capture how likely our young leaders are to recommend this peer experience.
                 </p>
               </div>
 
@@ -1163,7 +1163,7 @@ export default function ReyouHub() {
               <div className="p-6 bg-neutral-950 rounded border border-white/5 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                 <div className="space-y-2 col-span-2">
                   <h3 className="text-xs font-mono font-bold tracking-widest uppercase text-neutral-400">
-                    Active Formulation Protocol
+                    NPS Formulation Formula
                   </h3>
                   <code className="text-neutral-500 block text-[10px] bg-black/40 p-2.5 border border-white/5 font-mono">
                     NPS = % Promoters (Score 9-10) - % Detractors (Score 0-6)
@@ -1283,13 +1283,13 @@ export default function ReyouHub() {
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 5
+                  STUDENT RECOGNITION PLATFORM
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
                   Student Certificate of Distinction Generator
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Generates and renders visual excellence credentials with personalized metadata for Boardroom leaders.
+                  Celebrate our boardroom leaders by generating and downloading high-quality excellence credentials.
                 </p>
               </div>
 
@@ -1440,13 +1440,13 @@ export default function ReyouHub() {
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 6
+                  STUDENT GALLERY ARCHIVE
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
-                  REYOU Live Laboratory Photos Manager
+                  REYOU Live Experience Photos Manager
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Add and catalogue real laboratory snapshots tagged to specific Grade XII teams, maintaining visual deployment archives.
+                  Add and view beautiful learning moments and snapshots tagged to specific Grade XII teams.
                 </p>
               </div>
 
@@ -1583,13 +1583,13 @@ export default function ReyouHub() {
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 7
+                  STUDENT VOICE CAPTURE
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
-                  REYOU OS Testimonial Capture & Consent Vault
+                  Student Experience & Testimonials Vault
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Catalogues high-value statements from students, staff coordinators, and principals with photo consents and publication release matrices.
+                  Keep a beautiful archive of statements and highlights shared by students, teachers, and school heads.
                 </p>
               </div>
 
@@ -1718,13 +1718,13 @@ export default function ReyouHub() {
               <div className="border-b border-white/5 pb-4 flex justify-between items-center">
                 <div>
                   <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                    System 6 Marketing Sheet
+                    SCHOOL CASE STUDY PRESENTATION
                   </span>
                   <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
                     Army Public School Bhopal Case Study Sheet
                   </h2>
                   <p className="text-xs text-neutral-400 mt-1">
-                    Compiles institutional profiles, classroom interventions, and performance milestones into a 1-page proposal sales block.
+                    A neat profile of classroom impact, decision huddle metrics, and academic milestones achieved by the students.
                   </p>
                 </div>
                 
@@ -1771,7 +1771,7 @@ export default function ReyouHub() {
 
                   <div className="space-y-1">
                     <h4 className="font-mono text-[9px] font-black tracking-widest text-neutral-400 uppercase">Core Deliverables</h4>
-                    <p className="font-bold text-neutral-900">NPS Engine & Certificates</p>
+                    <p className="font-bold text-neutral-900">NPS Reflections & Certificates</p>
                     <p>Real-time satisfaction audit, Distinction Certificates, and quantitative executive reports for Principal.</p>
                   </div>
                 </div>
@@ -1845,13 +1845,13 @@ export default function ReyouHub() {
             <div className="space-y-6">
               <div className="border-b border-white/5 pb-4">
                 <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                  Active System 5
+                  COMMUNITY REVIEWS HUB
                 </span>
                 <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
-                  REYOU Google Review Rating Funnel
+                  REYOU Student Review Space
                 </h2>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Shields the public business profile by routing elite scores (4-5) to Google Reviews, and routing low reviews (1-3) to internal feedback forms.
+                  Help us celebrate our school cohort’s outstanding achievements. Authentic 5-star reviews go directly to show our community's success.
                 </p>
               </div>
 
@@ -1984,13 +1984,13 @@ export default function ReyouHub() {
               <div className="border-b border-white/5 pb-4 flex justify-between items-center flex-wrap gap-4">
                 <div>
                   <span className="font-mono text-[10px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">
-                    System 10 Composite Analytics
+                    COMPOSITE IMPACT VIEW
                   </span>
                   <h2 className="text-xl font-display font-extrabold text-white uppercase tracking-tight">
                     APS Bhopal Institutional Impact Report
                   </h2>
                   <p className="text-xs text-neutral-400 mt-1">
-                    Combines qualitative principal statements, dynamic teacher ratings, and student NPS data into a unified, high-octane presentation.
+                    Combines qualitative principal statements, dynamic teacher ratings, and student NPS reflections into a unified, high-impact presentation.
                   </p>
                 </div>
                 

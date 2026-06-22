@@ -125,13 +125,13 @@ export default function RoleCheckpoint({
         return {
           text: `Choosing Option ${option} makes me reflect on our past bias. We assumed our regular cash flows would never be interrupted. This is a severe confirmation bias trap.`,
           feedback: "Excellent metacognitive audit. Highly aligned with OECD self-regulation expectations.",
-          enhanced: `My self-regulation audit reveals we fell into a classic availability and optimism bias, assuming our health and regular cash streams were permanent. By selecting Option ${option}, we must institutionalize a 'Pre-Mortem' protocol for all future family financial expansions, ensuring structured counter-arguments are weighed before locks are applied.`
+          enhanced: `My self-regulation audit reveals we fell into a classic availability and optimism bias, assuming our health and regular cash streams were permanent. By selecting Option ${option}, we must institutionalize a 'Pre-Mortem' habit of reflection for all future family financial expansions, ensuring structured counter-arguments are weighed before locks are applied.`
         };
       default:
         return {
           text: `I support Option ${option} and suggest we manage the impact together as a professional unit.`,
           feedback: "Somewhat generic. Needs deeper alignment with specific role responsibilities.",
-          enhanced: `I approve the selected Option ${option}. I suggest setting up structured contingency protocols to maximize student consensus, ensuring all risk vectors are recursively audited by appropriate specialized roles.`
+          enhanced: `I approve the selected Option ${option}. I suggest setting up structured contingency steps to maximize student consensus, ensuring all risk vectors are recursively audited by appropriate specialized roles.`
         };
     }
   };
@@ -250,15 +250,15 @@ export default function RoleCheckpoint({
           <div className="flex items-center gap-2">
             <span className="inline-flex w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
             <span className="text-[10px] font-mono font-black text-[#D4AF37] uppercase tracking-widest">
-              Gated Peer-Social Consent Protocol
+              Team Evaluation & Shared Consent Habit
             </span>
           </div>
           <h3 className="text-lg font-serif font-bold text-white tracking-wide uppercase flex items-center gap-2">
             <ShieldCheck className="w-5.5 h-5.5 text-[#D4AF37]" />
-            COGNITIVE ROLE CHECKPOINT MODULE
+            SHARED REFLECTION JOURNEY
           </h3>
           <p className="text-[11px] text-neutral-400">
-            Before submitting the chosen alternative, all team roles must declare and secure AI consensus for their specialized focus areas.
+            Before resolving, let’s make sure every boardroom leader shares their perspective on our group choice.
           </p>
         </div>
 

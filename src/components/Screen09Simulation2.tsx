@@ -468,7 +468,7 @@ export default function Screen09Simulation2({
               REYOU SIMULATION 2.0
             </span>
             <h1 className="text-sm font-display font-medium text-white uppercase tracking-wider">
-              Life Happens • Uncertainty Protocol
+              Life Happens • Managing Uncertainty
             </h1>
           </div>
         </div>

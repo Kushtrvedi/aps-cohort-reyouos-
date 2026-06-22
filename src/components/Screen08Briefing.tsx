@@ -1543,8 +1543,8 @@ export default function Screen08Briefing({
                   {loadingPeerDecisions ? (
                     <div className="flex flex-col items-center justify-center py-16 space-y-4 border border-dashed border-[#D4AF37]/20 bg-black/40 rounded-sm">
                       <div className="w-6 h-6 rounded-full border-r-2 border-l-2 border-[#D4AF37] animate-spin" />
-                      <p className="font-mono text-[10px] text-neutral-400 tracking-widest animate-pulse uppercase">
-                        Establishing Real-time Cohort Sync Protocol...
+                      <p className="font-mono text-[10px] text-[#D4AF37] tracking-widest animate-pulse uppercase">
+                        Hearing thoughts from other smart teams...
                       </p>
                     </div>
                   ) : (
